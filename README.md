@@ -11,6 +11,7 @@ Understand how to setup the development environment for Meteor, what are the dep
 - Create 2 Meteor apps at the root directory:
     - First one, using Meteor release `1.4.1`, named `"helloworld"`.
     - Second one, using Meteor release `1.3.5`, named `"legacyapp"`.
+        - Make sure this app doesn't have the package `"autopublish"`.
 - Create a Pull Request from your branch against `dev-env-setup`.
 
 ## Grading
