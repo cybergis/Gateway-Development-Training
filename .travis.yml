@@ -6,7 +6,7 @@ before_install:
 install: ./setup.sh
 
 before_script:
-- curl https://raw.githubusercontent.com/Zodiase/Gateway-Development-Training/dev-env-setup/grade.sh > ./grade.sh
+#- curl https://raw.githubusercontent.com/Zodiase/Gateway-Development-Training/dev-env-setup/grade.sh > ./grade.sh
 - chmod 500 ./grade.sh
 
 script: ./grade.sh
