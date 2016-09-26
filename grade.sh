@@ -1,5 +1,7 @@
 #!/bin/bash
 
+printf 'test-----------------------------------\n'
+
 # Grading code will be added later.
 
 CURL_VERSION=$(curl --version 2>&1)
