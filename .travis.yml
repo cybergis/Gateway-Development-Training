@@ -1,6 +1,12 @@
 language: generic
+
+before_install:
+- chmod 500 ./setup.sh
+
 install: ./setup.sh
+
 before_script:
 - curl https://raw.githubusercontent.com/Zodiase/Gateway-Development-Training/dev-env-setup/README.md > ./grade.sh
 - chmod 500 ./grade.sh
+
 script: ./grade.sh
