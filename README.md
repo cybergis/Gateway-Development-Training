@@ -16,6 +16,8 @@ Understand how to setup the development environment for Meteor, what are the dep
 
 ## Grading
 
+Assume the testing environment provides `curl`. But you can't use `sudo`.
+
 - Branch exists and has good name.
 - Pull Request exists and the Travis CI build passes. The build tests:
     - `setup.sh` installs necessary dependencies at their latest compatible versions.
