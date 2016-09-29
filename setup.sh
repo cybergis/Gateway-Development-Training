@@ -199,9 +199,10 @@ METEOR_SYMLINK_TARGET="$(readlink "$HOME/.meteor/meteor")"
 METEOR_TOOL_DIRECTORY="$(dirname "$METEOR_SYMLINK_TARGET")"
 LAUNCHER="$HOME/.meteor/$METEOR_TOOL_DIRECTORY/scripts/admin/launch-meteor"
 
-echo $LAUNCHER
-stat $LAUNCHER
-#ln -s $LAUNCHER ~/bin/meteor
+mkdir ~/bin
+ln -s $LAUNCHER ~/bin/meteor
+export PATH=$PATH:~/bin
+meteor create lalala --release 1.4.1
 
 trap - EXIT
 }
