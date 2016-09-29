@@ -199,7 +199,9 @@ METEOR_SYMLINK_TARGET="$(readlink "$HOME/.meteor/meteor")"
 METEOR_TOOL_DIRECTORY="$(dirname "$METEOR_SYMLINK_TARGET")"
 LAUNCHER="$HOME/.meteor/$METEOR_TOOL_DIRECTORY/scripts/admin/launch-meteor"
 
-ln -s $LAUNCHER ~/bin/meteor
+echo $LAUNCHER
+stat $LAUNCHER
+#ln -s $LAUNCHER ~/bin/meteor
 
 trap - EXIT
 }
