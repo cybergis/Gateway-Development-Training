@@ -1,0 +1,13 @@
+language: generic
+  
+before_install:
+- chmod 500 ./setup.sh
+
+install:
+- ./setup.sh
+
+before_script:
+- chmod 500 ./grade.sh
+
+script: 
+- ./grade.sh
