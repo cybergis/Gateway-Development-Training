@@ -37,7 +37,7 @@ compare_version () {
 		printf 'Minimum node version "%s" not met. Detected version "%s".\n' "$MINIMUM_NODE_VERSION" "$NODE_VERSION"
 		exit 1
 	fi
-) || exit $?
+)
 
 # Install node for the test.
 # Use nvm to install node.
