@@ -33,10 +33,13 @@ append_profile () {
 # Install NVM.
 curl -o- -s https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
 # Reload bash profile.
-reload_profile
+#reload_profile
 
 # Install Node with NVM.
 . "$HOME/.bashrc"
+echo "SHELL: $SHELL"
+cat ~/.bashrc
+head $NVM_DIR/nvm.sh
 NODE_VERSION="4.5.0"
 nvm install "${NODE_VERSION}"
 nvm alias default "${NODE_VERSION}"
