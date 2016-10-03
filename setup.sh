@@ -38,6 +38,12 @@ reload_profile
 # Install Node with NVM.
 NODE_VERSION="4.5.0"
 (nvm install "${NODE_TEST_VERSION}" && nvm alias default "${NODE_TEST_VERSION}" && nvm use default) >/dev/null 2>&1
+# List node version after installing.
+node --version
+# Print PATH after installing node.
+echo $PATH
+# List home files after installing node.
+ls -al "$HOME"
 
 # Install Meteor.
 curl https://install.meteor.com/ | sh
