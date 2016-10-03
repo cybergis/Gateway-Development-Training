@@ -62,7 +62,9 @@ npm install compare-versions >/dev/null 2>&1
 		printf 'Unable to detect Meteor CLI tool.\n'
 		exit 1
 	fi
-) || exit $?
+) || {
+  curl https://install.meteor.com/ | sh
+}
 
 # Verify that app folders exist.
 APP_NAMES=( "helloworld" "legacyapp" )
