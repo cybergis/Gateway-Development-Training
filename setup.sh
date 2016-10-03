@@ -202,9 +202,15 @@ LAUNCHER="$HOME/.meteor/$METEOR_TOOL_DIRECTORY/scripts/admin/launch-meteor"
 mkdir ~/bin
 ln -s $LAUNCHER ~/bin/meteor
 export PATH=$PATH:~/bin
-meteor create lalala --release 1.4.1
 
 trap - EXIT
 }
 
 run_it
+
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+
+export NVM_DIR="/home/ubuntu/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+nvm install node
