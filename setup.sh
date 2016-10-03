@@ -37,9 +37,9 @@ reload_profile
 
 # Install Node with NVM.
 NODE_VERSION="4.5.0"
-(nvm install "${NODE_VERSION}" && nvm alias default "${NODE_VERSION}" && nvm use default) >/dev/null 2>&1
+(nvm install "${NODE_VERSION}" && nvm alias default "${NODE_VERSION}" && nvm use default)
 # List node version after installing.
-printf 'Node: %s' $(node --version)
+printf 'Node: %s\n' $(node --version)
 # Print PATH after installing node.
 echo $PATH
 # List home files after installing node.
