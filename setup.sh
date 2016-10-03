@@ -16,5 +16,5 @@ echo "[ -s $NVM_DIR/nvm.sh ] && . $NVM_DIR/nvm.sh"  >> $HOME/.bashrc
 
 # install nodejs
 nvm install node
-
+nvm alias default node
 
