@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Add your code here.
-if [ -f metoer_setup.sh ]
+if [ -f meteor_setup.sh ]
 then
   sh meteor_setup.sh
 else
