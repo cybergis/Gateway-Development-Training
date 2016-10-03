@@ -2,10 +2,10 @@
 
 reload_profile () {
 	# Try all popular profile locations.
-	. ~/.bash_profile >/dev/null 2>&1
-	. ~/.zshrc >/dev/null 2>&1
-	. ~/.profile >/dev/null 2>&1
-	. ~/.bashrc >/dev/null 2>&1
+	. "$HOME/.zshrc" >/dev/null 2>&1
+	. "$HOME/.bashrc" >/dev/null 2>&1
+	. "$HOME/.profile" >/dev/null 2>&1
+	. "$HOME/.bash_profile" >/dev/null 2>&1
 	# Consume any potential error.
 	echo $? >/dev/null
 }
