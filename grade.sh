@@ -47,7 +47,7 @@ compare_version () {
 	# Verify node version.
 	MINIMUM_NODE_VERSION="4.4.7"
 	if [[ $(compare_version "${NODE_VERSION}" "${MINIMUM_NODE_VERSION}") == -1 ]]; then
-		printf 'Minimum node version not met.\n'
+		printf 'Minimum node version "%s" not met. Detected version "%s".\n' "$MINIMUM_NODE_VERSION" "$NODE_VERSION"
 		exit 1
 	fi
 ) || exit $?
