@@ -36,10 +36,12 @@ curl -o- -s https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh 
 #reload_profile
 
 # Install Node with NVM.
+echo 'bashrc--------------------------------'
+cat "$HOME/.bashrc"
+echo 'bashrc--------------------------------'
 . "$HOME/.bashrc"
-echo "SHELL: $SHELL"
-cat ~/.bashrc
-head $NVM_DIR/nvm.sh
+printf 'NVM_DIR: %s\n' "$NVM_DIR"
+
 NODE_VERSION="4.5.0"
 nvm install "${NODE_VERSION}"
 nvm alias default "${NODE_VERSION}"
