@@ -10,6 +10,7 @@ source ~/.profile
 # Install and use Nodejs
 nvm install node
 nvm use node
+nvm alias default node
 
 # Download and install meteor
 curl https://install.meteor.com/ | sh
