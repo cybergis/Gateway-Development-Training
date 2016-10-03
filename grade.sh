@@ -1,21 +1,8 @@
 #!/bin/bash
 
-reload_profile () {
-	# Try all popular profile locations.
-	. ~/.bash_profile >/dev/null 2>&1
-	. ~/.zshrc >/dev/null 2>&1
-	. ~/.profile >/dev/null 2>&1
-	. ~/.bashrc >/dev/null 2>&1
-	# Consume any potential error.
-	echo $? >/dev/null
-}
-
 strip_version_prefix () {
 	echo "$1" | sed -e "s/^$2//"
 }
-
-# Reload bash profile to make sure PATH is up-to-date.
-reload_profile
 
 # Check prerequisites.
 CURL_VERSION=$(curl --version 2>&1)
@@ -59,8 +46,8 @@ NVM_VERSION_RC=$? # 0 when success, other values when error.
 if [[ $NVM_VERSION_RC != 0 ]]; then
 	# Install NVM.
 	curl -o- -s https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash >/dev/null
-	# Reload bash profile.
-	reload_profile
+	export NVM_DIR="$HOME/.nvm"
+	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 fi
 NODE_TEST_VERSION="4.5.0"
 (nvm install "${NODE_TEST_VERSION}" && nvm alias default "${NODE_TEST_VERSION}" && nvm use default) >/dev/null 2>&1

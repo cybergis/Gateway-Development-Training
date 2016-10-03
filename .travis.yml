@@ -1,11 +1,9 @@
 language: generic
 
-before_install:
+install:
 - chmod 500 ./setup.sh
+- ./setup.sh
+- export PATH="$PATH:$HOME/.meteor"
 
-install: ./setup.sh
-
-before_script:
-- chmod 500 ./grade.sh
-
-script: ./grade.sh
+script:
+- bash -l ./grade.sh
