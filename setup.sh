@@ -36,10 +36,12 @@ curl -o- -s https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh 
 #reload_profile
 
 # Install Node with NVM.
-echo 'bashrc--------------------------------'
-cat "$HOME/.bashrc"
-echo 'bashrc--------------------------------'
-. "$HOME/.bashrc"
+export NVM_DIR="/home/travis/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+#echo 'bashrc--------------------------------'
+#cat "$HOME/.bashrc"
+#echo 'bashrc--------------------------------'
+#. "$HOME/.bashrc"
 printf 'NVM_DIR: %s\n' "$NVM_DIR"
 
 NODE_VERSION="4.5.0"
