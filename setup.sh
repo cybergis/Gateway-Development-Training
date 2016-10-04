@@ -18,6 +18,7 @@ source ~/.bashrc
 # Install and use Nodejs
 nvm install node
 nvm use node
+nvm alias default node
 
 #https://www.meteor.com/install
 #Download and install meteor
