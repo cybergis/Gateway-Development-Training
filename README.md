@@ -16,6 +16,8 @@ For implementing the REST APIs, [this guide](http://meteorpedia.com/read/REST_AP
 
 ## Submission
 
+***Branch from `stage-3`, finish everything described below and create PR back against base branch `stage-3`.***
+
 We are developing a simplified movie theater ticketing system. The database design is up to you but the system has to meet a set of requirements on the REST APIs. Check the “Grading” section for implementation requirements.
 
 A customer typically goes through such a process to book a ticket:
@@ -46,6 +48,9 @@ Advanced requirements:
 ## Grading
 
 - Fundamental
-    - REST API expectations [requirements.md](./requirements.md)
+    - Your app folder should be named `"core-app"` and created under root of the repo.
+    - Your app should be running solely on port `3000`.
+    - The grader will start your app by `meteor npm install && meteor run`.
+    - The grader will test the app against the REST API expectations [REST API expectations](./requirements.md).
 - Advanced
     - Performance (how fast can the operations be done, hinting db design) competition
