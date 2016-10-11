@@ -450,7 +450,7 @@ Connection: close
 }
 ```
 
-## Check ticket info
+## Check ticket info (optional)
 
 ### Request
 ```
