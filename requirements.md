@@ -1,5 +1,9 @@
 # REST API expectations/requirements
 
+- For any type of client errors, MUST always respond with status code `4**`.
+- For all successful requests, MUST always respond with status code `2**`.
+- All response content type MUST be `application/json`.
+
 ## List all scheduled movies
 
 ### Request
