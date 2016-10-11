@@ -10,15 +10,6 @@ Connection: close
 ```
 
 - Sorting: By time of the most recent schedule in ascending order
-- Filtering: By time of the most recent schedule in range from now to 30 days from now
-    - By starting time
-        - Url Parameter: `"filter=time_begin:<time>"`
-        - Value Format: milliseconds elapsed since the UNIX epoch
-        - Default Value: `Date.now()`
-    - By ending time
-        - Url Parameter: `"filter=time_end:<time>"` (now)
-        - Value Format: milliseconds elapsed since the UNIX epoch
-        - Default Value: `Date.now() + 1000*60*60*24*30` (30 days from now)
 
 ### Response
 
@@ -62,7 +53,6 @@ Connection: close
 ```
 
 - Sorting: By time of the schedule in ascending order
-- Filtering: By time of the schedule in range from now to 30 days from now
 
 ### Response
 
