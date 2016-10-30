@@ -43,6 +43,7 @@ To simplify the requirements for this training, we make the following assumption
 You would have to add code to fill in preset data for grading. Refer to the *fixtures* used in the last stage.
 
 Advanced requirements:
+
 0. Database design efficiency
 
 ## Grading
@@ -51,6 +52,6 @@ Advanced requirements:
     - Your app folder should be named `"core-app"` and created under root of the repo.
     - Your app should be running solely on port `3000`.
     - The grader will start your app by `meteor npm install && meteor run`.
-    - The grader will test the app against the REST API expectations [REST API expectations](./requirements.md).
+    - The grader will test the app against the [REST API expectations](./requirements.md).
 - Advanced
     - Performance (how fast can the operations be done, hinting db design) competition
