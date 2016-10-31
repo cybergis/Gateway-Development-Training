@@ -10,7 +10,7 @@ dependencies:
     - npm install --global mocha
     - npm install chai chai-http
     - cd "core-app" && meteor npm install && meteor --production > /dev/null 2>&1 &
-    - while ! echo exit | nc localhost 3000; do sleep 1; done
+    - while ! curl http://localhost:3000; do sleep 1; done
 test:
   override:
     - mocha grader.js
