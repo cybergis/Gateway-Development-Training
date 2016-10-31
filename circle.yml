@@ -7,8 +7,9 @@ checkout:
 dependencies:
   override:
     - curl https://install.meteor.com | /bin/sh
-    - cd "core-app" && meteor npm install && meteor run &
     - npm install --global mocha
+    - npm install chai chai-http
+    - cd "core-app" && meteor npm install && meteor run &
 test:
   override:
     - pwd
