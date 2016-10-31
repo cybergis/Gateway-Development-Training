@@ -1,0 +1,13 @@
+- [x] List all scheduled movies
+    - [x] Sorting: By time of the most recent schedule in ascending order
+- [x] List all schedules of the selected movie
+    - [x] Sorting: By time of the schedule in ascending order
+- [x] List all rooms of the selected schedule of the selected movie
+    - [x] Sorting: By number of available seats in descending order
+- [x] List all seats of the selected room for the selected schedule of the selected movie
+    - [x] Sorting: By seat number in ascending order (default)
+    - [x] Sorting: By seat availability and then seat number
+    - [x] Filtering: By seat rows
+- [x] Check availability of the selected seat of the selected room for the selected schedule of the selected movie
+- [x] Book the selected seat of the selected room for the selected schedule of the selected movie
+- [ ] Check ticket info (optional)
