@@ -9,8 +9,8 @@ dependencies:
     - curl https://install.meteor.com | /bin/sh
     - npm install --global mocha
     - npm install chai chai-http
-    - cd "core-app" && meteor npm install && meteor build ../build
-    - cd "core-app" && meteor --production > /dev/null 2>&1 &
+    - cd "core-app" && meteor npm install && meteor --production:
+          background: true
     - while ! curl http://localhost:3000; do sleep 10; done
 test:
   override:
