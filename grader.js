@@ -2,6 +2,7 @@
 
 var url = require('url');
 var path = require('path');
+var _ = require('lodash');
 var chai = require('chai');
 var expect = chai.expect;
 var chaiHttp = require('chai-http');
@@ -21,6 +22,10 @@ function getDigit (val, index) {
   return result;
 }
 
+function validateDateString (str) {
+  return (new Date(str)).toJSON() === str;
+}
+
 function validateSelfLink (obj) {
   expect(obj).to.be.an('object')
     .and.have.property('self');
@@ -36,6 +41,30 @@ function validateRelationObject (obj) {
       .and.have.property('links');
     expect(obj[propName].links).to.satisfy(validateSelfLink);
   });
+  return true;
+}
+
+/**
+ * @param {Object.<Type, ID>} mustInclude
+ * @param {Array} ary
+ * @return {boolean}
+ */
+function validateIncludedArray (mustInclude, ary) {
+  expect(ary).to.be.an('array');
+  var counts = {};
+  Object.keys(mustInclude).forEach(function (type) {
+    counts[type] = 0;
+  });
+  ary.forEach(function (obj) {
+    expect(obj).to.be.an('object');
+    if (typeof counts[obj.type] !== 'undefined' && obj.id === mustInclude[obj.type]) {
+      counts[obj.type]++;
+    }
+  });
+  expect(Object.keys(counts).every(function (type) {
+    return counts[type] === 1;
+  })).to.be.true;
+
   return true;
 }
 
@@ -57,7 +86,11 @@ describe('App', function() {
   var savedMovies = [];
 
 	describe('/movies', function() {
-	  var selfPath = path.join(endpoint, 'movies');
+	  var selfPath;
+
+    before(function() {
+      selfPath = path.join(endpoint, 'movies');
+    });
 
     it('should list all scheduled movies', function (done) {
       chai.request(host)
@@ -69,15 +102,14 @@ describe('App', function() {
           expect(res.body).to.be.an('object');
 
           // Check links?
-          var links = res.body.links;
-          expect(links).to.satisfy(validateSelfLink);
+          expect(res.body).to.have.property('links')
+            .that.satisfy(validateSelfLink);
 
-          var data = res.body.data;
           // Check data.
-          expect(data).to.be.an('array')
-            .and.have.length.of.at.least(1);
+          expect(res.body).to.have.property('data')
+            .that.is.an('array').and.have.length.of.at.least(1);
 
-          data.forEach(function (movie) {
+          res.body.data.forEach(function (movie) {
             expect(movie).to.be.an('object')
               .and.have.property('type', 'movies');
 
@@ -112,9 +144,12 @@ describe('App', function() {
             savedMovies.push({
               title: movie.attributes.title,
               id: movie.id,
+              mostRecentScheduleAt: new Date(movie.attributes.mostRecentScheduleAt),
               scheduleLink: movie.relationships.schedules.links.self
             });
           });
+
+          //! `savedMovies` has to be sorted by `mostRecentScheduleAt` in ascending order.
 
           done();
         });
@@ -134,4 +169,75 @@ describe('App', function() {
     });
 
 	});
+
+	describe('/movies/<someMovieId>/schedules', function() {
+	  var theMovie, selfPath;
+
+    before(function() {
+      theMovie = savedMovies[0];
+      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules');
+    });
+
+    it('should list all schedules of the selected movie', function (done) {
+      chai.request(host)
+        .get(selfPath)
+        .end(function (err, res) {
+          expect(err).to.be.null;
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('object');
+
+          // Check links?
+          expect(res.body).to.have.property('links')
+            .that.satisfy(validateSelfLink);
+
+          // Check data.
+          expect(res.body).to.have.property('data')
+            .that.is.an('array').and.have.length.of.at.least(1);
+
+          res.body.data.forEach(function (schedule) {
+            expect(schedule).to.be.an('object')
+              .and.have.property('type', 'schedules');
+
+            expect(schedule).to.have.property('id')
+              .that.is.a('number').and.not.empty;
+
+            // Check data item attributes.
+            expect(schedule).to.have.property('attributes')
+              .that.is.an('object');
+
+            // Every schedule has to have a start date.
+            expect(schedule.attributes).to.have.property('startAt')
+              .that.is.a('string').and.satisfy(validateDateString);
+
+            // Every schedule has to have a price.
+            expect(schedule.attributes).to.have.property('price')
+              .that.is.a('number');
+
+            // Check data item relationships.
+            expect(schedule).to.have.property('relationships')
+              .that.is.an('object')
+              .and.have.property('rooms')
+                .that.is.an('object')
+                .and.have.property('links')
+                  .that.satisfy(validateSelfLink);
+
+            // Check data item link.
+            expect(schedule).to.have.property('links')
+              .that.satisfy(validateSelfLink);
+          });
+
+          //! schedules has to be sorted by `startAt` in ascending order.
+
+          // Check included.
+          expect(res.body).to.have.property('included')
+            .that.is.an('array').and.satisfy(_.partial(validateIncludedArray, {
+              movies: theMovie.id
+            }));
+
+          done();
+        });
+    });
+  });
+
 });
