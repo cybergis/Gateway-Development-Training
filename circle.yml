@@ -7,11 +7,10 @@ checkout:
 dependencies:
   override:
     - curl https://install.meteor.com | /bin/sh
+    - cd "core-app" && meteor npm install && meteor run &
     - npm install --global mocha
 test:
   override:
-    - cd "core-app"
-    - meteor npm install
-    - meteor run &
-    - mocha ../grader.js
+    - pwd
+    - mocha grader.js
 
