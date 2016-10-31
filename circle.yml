@@ -1,0 +1,17 @@
+machine:
+  node:
+    version: 0.10.43
+checkout:
+  post:
+    - git submodule update --init
+dependencies:
+  override:
+    - curl https://install.meteor.com | /bin/sh
+    - npm install --global mocha
+    - npm install chai chai-http
+    - cd "core-app" && meteor npm install && meteor --production:
+          background: true
+    - while ! curl http://localhost:3000; do sleep 10; done
+test:
+  override:
+    - mocha grader.js
