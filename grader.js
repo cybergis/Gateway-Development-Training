@@ -71,9 +71,9 @@ function validateIncludedArray (mustInclude, ary) {
 
 // Tests start.
 
-describe('App', function() {
+describe('App', function () {
   var theMovie, theSchedule, theRoom, theSeat;
-  
+
 	it('should be online', function (done) {
 		chai.request(host)
       .get('/')
@@ -86,104 +86,193 @@ describe('App', function() {
       });
 	});
 
-	describe('/movies', function() {
-	  var selfPath;
+  describe('list all scheduled movies', function () {
 
-    before(function() {
+    var selfPath, response;
+
+    before(function () {
       selfPath = path.join(endpoint, 'movies');
     });
 
-    it('should list all scheduled movies', function (done) {
-      chai.request(host)
-        .get(selfPath)
-        .end(function (err, res) {
-          expect(err).to.be.null;
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.an('object');
+    describe('Endpoint', function () {
 
-          // Check links.
-          expect(res.body).to.have.property('links')
-            .that.satisfy(_.partialRight(validateSelfLink, selfPath));
+      it('should send some data to get requests', function (done) {
+        chai.request(host)
+          .get(selfPath)
+          .end(function (err, res) {
+            expect(err).to.be.null;
+            response = res;
+            done();
+          });
+      });
 
-          // Check data.
-          expect(res.body).to.have.property('data')
-            .that.is.an('array')
+      it('should return 4** for posts', function (done) {
+        chai.request(host)
+          .post(selfPath)
+          .end(function (err, res) {
+            expect(err).to.not.be.null;
+            // statusCode should be 4**.
+            expect(getDigit(res.statusCode, 2)).to.equal(4);
+            expect(res).to.be.json;
+
+            done();
+          });
+      });
+
+    });
+
+    describe('response', function () {
+
+      it('should have status code 200', function () {
+        expect(response).to.have.status(200);
+      });
+
+      it('should have content in JSON', function () {
+        expect(response).to.be.json;
+      });
+
+      it('should have an object in body', function () {
+        expect(response).to.be.an('object');
+      });
+
+      describe('response body', function () {
+
+        it('should have property "links"', function () {
+          expect(response.body).to.have.property('links');
+        });
+
+        it('should have property "data"', function () {
+          expect(response.body).to.have.property('data');
+        });
+
+        describe('links', function () {
+
+          it('should point to this page', function () {
+            expect(response.body.links).to.satisfy(_.partialRight(validateSelfLink, selfPath));
+          });
+
+        });
+
+        describe('data', function () {
+
+          it('should be a list with at least one item', function () {
+            expect(response.body.data).to.be.an('array')
             .and.have.length.of.at.least(1);
-
-          res.body.data.every(function (movie) {
-            expect(movie).to.be.an('object')
-            .and.have.property('type', 'movies');
-
-            expect(movie).to.have.property('id')
-              .that.is.a('string')
-              .and.not.empty;
-
-            // Check data item attributes.
-            expect(movie).to.have.property('attributes')
-              .that.is.an('object');
-
-            // Every movie has to have a non-empty title.
-            expect(movie.attributes).to.have.property('title')
-              .that.is.a('string')
-              .and.not.empty;
-
-            // Every movie has to have a date for the most recent schedule.
-            expect(movie.attributes).to.have.property('mostRecentScheduleAt')
-              // Verify it's a Date-compatible string.
-              .that.is.a('string')
-              .and.satisfy(validateDateString);
-
-            // Check data item relationships.
-            expect(movie).to.have.property('relationships')
-              .that.is.an('object');
-
-            expect(movie.relationships).to.have.property('schedules')
-              .that.is.an('object')
-              .and.have.property('links')
-                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules')));
-
-            // Check data item link.
-            expect(movie).to.have.property('links')
-              .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id)));
-
-            return true;
           });
 
-          // Movies have to be sorted by `mostRecentScheduleAt` in ascending order.
-          res.body.data.reduce(function (a, b) {
-            var dateA = new Date(a.attributes.mostRecentScheduleAt),
-                dateB = new Date(b.attributes.mostRecentScheduleAt);
-            expect(dateA).to.be.most(dateB);
-            return b;
+          describe('every item', function () {
+
+            it('should be an object with type "movies"', function () {
+              response.body.data.every(function (movie) {
+                expect(movie).to.be.an('object')
+                .and.have.property('type', 'movies');
+                return true;
+              });
+            });
+
+            it('should have a string type property "id" that is not empty', function () {
+              response.body.data.every(function (movie) {
+                expect(movie).to.have.property('id')
+                  .that.is.a('string')
+                  .and.not.empty;
+                return true;
+              });
+            });
+
+            it('should have an object type property "attributes"', function () {
+              response.body.data.every(function (movie) {
+                expect(movie).to.have.property('attributes')
+                  .that.is.an('object');
+                return true;
+              });
+            });
+
+            it('should have an object type property "relationships"', function () {
+              response.body.data.every(function (movie) {
+                expect(movie).to.have.property('relationships')
+                  .that.is.an('object');
+                return true;
+              });
+            });
+
+            describe('property "attributes"', function () {
+
+              it('should have a string type property "title" that is not empty', function () {
+                response.body.data.every(function (movie) {
+                  expect(movie.attributes).to.have.property('title')
+                    .that.is.a('string')
+                    .and.not.empty;
+                  return true;
+                });
+              });
+
+              it('should have a string type property "mostRecentScheduleAt" that represents a date', function () {
+                response.body.data.every(function (movie) {
+                  expect(movie.attributes).to.have.property('mostRecentScheduleAt')
+                    // Verify it's a Date-compatible string.
+                    .that.is.a('string')
+                    .and.satisfy(validateDateString);
+                  return true;
+                });
+              });
+
+            });
+
+            describe('property "relationships"', function () {
+
+              it('should have an object type property "schedules" that links to the schedules page', function () {
+                response.body.data.every(function (movie) {
+                  expect(movie.relationships).to.have.property('schedules')
+                    .that.is.an('object')
+                    .and.have.property('links')
+                      .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules')));
+                  return true;
+                });
+              });
+
+            });
+
+            describe('property "links"', function () {
+
+              it('should point to the item', function () {
+                response.body.data.every(function (movie) {
+                  expect(movie).to.have.property('links')
+                    .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id)));
+                  return true;
+                });
+              });
+
+            });
+
           });
-          
-          // Save the movie for the next tests.
-          theMovie = res.body.data[0];
 
-          done();
+          describe('all items', function () {
+
+            it('should be sorted by the time of the most recent schedule in ascending order', function () {
+              response.body.data.reduce(function (a, b) {
+                var dateA = new Date(a.attributes.mostRecentScheduleAt),
+                    dateB = new Date(b.attributes.mostRecentScheduleAt);
+                expect(dateA).to.be.most(dateB);
+                return b;
+              });
+
+              // Save the movie for the next tests.
+              theMovie = response.body.data[0];
+            });
+
+          });
+
         });
+
+      });
     });
 
-    it('should return 4** for posts', function (done) {
-      chai.request(host)
-        .post(selfPath)
-        .end(function (err, res) {
-          expect(err).to.not.be.null;
-          // statusCode should be 4**.
-          expect(getDigit(res.statusCode, 2)).to.equal(4);
-          expect(res).to.be.json;
+  });
 
-          done();
-        });
-    });
-
-	});
-
-	describe('/movies/<someMovieId>/schedules', function() {
+	describe('/movies/<someMovieId>/schedules', function () {
 	  var selfPath;
 
-    before(function() {
+    before(function () {
       selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules');
     });
 
@@ -283,10 +372,10 @@ describe('App', function() {
 
   });
 
-  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms', function() {
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms', function () {
 	  var selfPath;
 
-    before(function() {
+    before(function () {
       selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms');
     });
 
@@ -306,11 +395,11 @@ describe('App', function() {
     });
 
   });
-  
-  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats[?sort&filter]', function() {
+
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats[?sort&filter]', function () {
     var selfPath;
 
-    before(function() {
+    before(function () {
       selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats');
     });
 
@@ -330,10 +419,10 @@ describe('App', function() {
     });
   });
 
-  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats/<someSeatId>', function() {
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats/<someSeatId>', function () {
     var selfPath;
 
-    before(function() {
+    before(function () {
       selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', theSeat.id);
     });
 
@@ -353,10 +442,10 @@ describe('App', function() {
     });
   });
 
-  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats/<someSeatId>/order', function() {
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats/<someSeatId>/order', function () {
     var selfPath;
 
-    before(function() {
+    before(function () {
       selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', theSeat.id);
     });
 
