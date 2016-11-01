@@ -35,7 +35,7 @@ RestApi.addRoute('tickets', { authRequired: false }, _.defaults({
               data: { type: 'movies', id: movieId }
             },
             schedule: {
-              data: { type: 'schedules', id: scheduleId }
+              data: { type: 'schedules', id: String(scheduleId) }
             },
             room: {
               data: { type: 'rooms', id: roomId }
@@ -171,7 +171,7 @@ RestApi.addRoute('movies/:movieId/schedules', { authRequired: false }, _.default
     const data = movie.schedules
     .map(({ _id, attributes }) => ({
       type: 'schedules',
-      id: _id,
+      id: String(_id),
       attributes,
       relationships: {
         movie: {
@@ -244,7 +244,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms', { authRequired: 
             },
             {
               type: 'schedules',
-              id: scheduleId,
+              id: String(scheduleId),
               attributes: schedule.attributes,
               links: {
                 self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
@@ -272,7 +272,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms', { authRequired: 
             data: { type: 'movies', id: movieId }
           },
           schedule: {
-            data: { type: 'schedules', id: scheduleId }
+            data: { type: 'schedules', id: String(scheduleId) }
           },
           seats: {
             links: {
@@ -361,7 +361,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
             },
             {
               type: 'schedules',
-              id: scheduleId,
+              id: String(scheduleId),
               attributes: schedule.attributes,
               links: {
                 self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
@@ -427,7 +427,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
           data: { type: 'movies', id: movieId }
         },
         schedule: {
-          data: { type: 'schedules', id: scheduleId }
+          data: { type: 'schedules', id: String(scheduleId) }
         },
         room: {
           data: { type: 'rooms', id: roomId }
@@ -511,7 +511,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
               data: { type: 'movies', id: movieId }
             },
             schedule: {
-              data: { type: 'schedules', id: scheduleId }
+              data: { type: 'schedules', id: String(scheduleId) }
             },
             room: {
               data: { type: 'rooms', id: roomId }
@@ -633,7 +633,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
               data: { type: 'movies', id: movieId }
             },
             schedule: {
-              data: { type: 'schedules', id: scheduleId }
+              data: { type: 'schedules', id: String(scheduleId) }
             },
             room: {
               data: { type: 'rooms', id: roomId }
@@ -657,7 +657,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
           },
           {
             type: 'schedules',
-            id: scheduleId,
+            id: String(scheduleId),
             attributes: schedule.attributes,
             links: {
               self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
