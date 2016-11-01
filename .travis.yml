@@ -1,7 +1,7 @@
 language: generic
 
-install:
-  - . setup.sh
+# install:
 
 script:
+  - . setup.sh
   - mocha grader.js
