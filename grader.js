@@ -37,13 +37,10 @@ function validateSelfLink (obj, expectedSelfPath) {
   return true;
 }
 
-function validateRelationObject (obj) {
-  expect(obj).to.be.an('object');
-  Object.keys(obj).forEach(function (propName) {
-    expect(obj[propName]).to.be.an('object')
-      .and.have.property('links');
-    expect(obj[propName].links).to.satisfy(validateSelfLink);
-  });
+function validateRelationObject (obj, type, id) {
+  expect(obj).to.be.an('object').and.have.property('data');
+  expect(obj.data).to.have.property('type', type);
+  expect(obj.data).to.have.property('id', id);
   return true;
 }
 
@@ -86,7 +83,8 @@ describe('App', function() {
       });
 	});
 
-  var savedMovies = [];
+  var savedMovies = [],
+      savedSchedules = [];
 
 	describe('/movies', function() {
 	  var selfPath;
@@ -186,11 +184,11 @@ describe('App', function() {
 	});
 
 	describe('/movies/<someMovieId>/schedules', function() {
-	  var theMovie, selfPath;
+	  var movie, selfPath;
 
     before(function() {
-      theMovie = savedMovies[0];
-      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules');
+      movie = savedMovies[0];
+      selfPath = path.join(endpoint, 'movies', movie.id, 'schedules');
     });
 
     it('should list all schedules of the selected movie', function (done) {
@@ -202,17 +200,17 @@ describe('App', function() {
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
 
-          // Check links?
+          // Check links.
           expect(res.body).to.have.property('links')
-            .that.satisfy(validateSelfLink);
+            .that.satisfy(_.partialRight(validateSelfLink, selfPath));
 
           // Check data.
           expect(res.body).to.have.property('data')
             .that.is.an('array').and.have.length.of.at.least(1);
 
-          res.body.data.forEach(function (schedule) {
+          res.body.data.every(function (schedule) {
             expect(schedule).to.be.an('object')
-              .and.have.property('type', 'schedules');
+            .and.have.property('type', 'schedules');
 
             expect(schedule).to.have.property('id')
               .that.is.a('number').and.not.empty;
@@ -231,23 +229,45 @@ describe('App', function() {
 
             // Check data item relationships.
             expect(schedule).to.have.property('relationships')
+              .that.is.an('object');
+
+            expect(schedule.relationships).to.have.property('movie')
               .that.is.an('object')
-              .and.have.property('rooms')
-                .that.is.an('object')
-                .and.have.property('links')
-                  .that.satisfy(validateSelfLink);
+              .and.satisfy(_.partialRight(validateRelationObject, 'movies', movie.id));
+
+            expect(schedule.relationships).to.have.property('rooms')
+              .that.is.an('object')
+              .and.have.property('links')
+                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules', String(schedule.id), 'rooms')));
 
             // Check data item link.
             expect(schedule).to.have.property('links')
               .that.satisfy(validateSelfLink);
+
+            return true;
           });
 
-          //! schedules has to be sorted by `startAt` in ascending order.
+          // Schedules has to be sorted by `startAt` in ascending order.
+          res.body.data.reduce(function (a, b) {
+            var dateA = new Date(a.attributes.startAt),
+                dateB = new Date(b.attributes.startAt);
+            expect(dateA).to.be.most(dateB);
+            return b;
+          });
+
+          // Save the schedules for the next tests.
+          savedSchedules = res.body.data.map(function (schedule) {
+            return {
+              startAt: schedule.attributes.startAt,
+              id: schedule.id,
+              roomLink: schedule.relationships.rooms.links.self
+            };
+          });
 
           // Check included.
           expect(res.body).to.have.property('included')
             .that.is.an('array').and.satisfy(_.partial(validateIncludedArray, {
-              movies: theMovie.id
+              movies: movie.id
             }));
 
           done();
