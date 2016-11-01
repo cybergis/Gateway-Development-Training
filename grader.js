@@ -219,7 +219,7 @@ describe('App', function() {
             .and.have.property('type', 'schedules');
 
             expect(schedule).to.have.property('id')
-              .that.is.a('number')
+              .that.is.a('string')
               .and.not.empty;
 
             // Check data item attributes.
@@ -246,7 +246,7 @@ describe('App', function() {
             expect(schedule.relationships).to.have.property('rooms')
               .that.is.an('object')
               .and.have.property('links')
-                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules', String(schedule.id), 'rooms')));
+                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules', schedule.id, 'rooms')));
 
             // Check data item link.
             expect(schedule).to.have.property('links')
