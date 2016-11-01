@@ -26,11 +26,14 @@ function validateDateString (str) {
   return (new Date(str)).toJSON() === str;
 }
 
-function validateSelfLink (obj) {
+function validateSelfLink (obj, expectedSelfPath) {
   expect(obj).to.be.an('object')
     .and.have.property('self');
   expect(obj.self).to.be.a('string')
     .and.not.empty;
+  if (typeof expectedSelfPath !== 'undefined') {
+    expect(url.parse(obj.self).pathname).to.equal(expectedSelfPath);
+  }
   return true;
 }
 
@@ -101,15 +104,15 @@ describe('App', function() {
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
 
-          // Check links?
+          // Check links.
           expect(res.body).to.have.property('links')
-            .that.satisfy(validateSelfLink);
+            .that.satisfy(_.partialRight(validateSelfLink, selfPath));
 
           // Check data.
           expect(res.body).to.have.property('data')
             .that.is.an('array').and.have.length.of.at.least(1);
 
-          res.body.data.forEach(function (movie) {
+          res.body.data.every(function (movie) {
             expect(movie).to.be.an('object')
               .and.have.property('type', 'movies');
 
@@ -127,29 +130,41 @@ describe('App', function() {
             // Every movie has to have a date for the most recent schedule.
             expect(movie.attributes).to.have.property('mostRecentScheduleAt')
               // Verify it's a Date-compatible string.
-              .that.is.a('string').and.equal((new Date(movie.attributes.mostRecentScheduleAt)).toJSON());
+              .that.is.a('string').and.satisfy(validateDateString);
 
             // Check data item relationships.
             expect(movie).to.have.property('relationships')
+              .that.is.an('object');
+
+            expect(movie.relationships).to.have.property('schedules')
               .that.is.an('object')
-              .and.have.property('schedules')
-                .that.is.an('object')
-                .and.have.property('links')
-                  .that.satisfy(validateSelfLink);
+              .and.have.property('links')
+                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules')));
 
             // Check data item link.
             expect(movie).to.have.property('links')
-              .that.satisfy(validateSelfLink);
+              .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id)));
 
-            savedMovies.push({
+            return true;
+          });
+
+          // Data items has to be sorted by `mostRecentScheduleAt` in ascending order.
+          res.body.data.reduce(function (a, b) {
+            var dateA = new Date(a.attributes.mostRecentScheduleAt),
+                dateB = new Date(b.attributes.mostRecentScheduleAt);
+            expect(dateA).to.be.most(dateB);
+            return b;
+          });
+          
+          // Save the movies for the next tests.
+          savedMovies = res.body.data.map(function (movie) {
+            return {
               title: movie.attributes.title,
               id: movie.id,
               mostRecentScheduleAt: new Date(movie.attributes.mostRecentScheduleAt),
               scheduleLink: movie.relationships.schedules.links.self
-            });
+            };
           });
-
-          //! `savedMovies` has to be sorted by `mostRecentScheduleAt` in ascending order.
 
           done();
         });
