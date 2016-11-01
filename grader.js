@@ -28,9 +28,9 @@ function validateDateString (str) {
 
 function validateSelfLink (obj, expectedSelfPath) {
   expect(obj).to.be.an('object')
-    .and.have.property('self');
+  .and.have.property('self');
   expect(obj.self).to.be.a('string')
-    .and.not.empty;
+  .and.not.empty;
   if (typeof expectedSelfPath !== 'undefined') {
     expect(url.parse(obj.self).pathname).to.equal(expectedSelfPath);
   }
@@ -38,7 +38,8 @@ function validateSelfLink (obj, expectedSelfPath) {
 }
 
 function validateRelationObject (obj, type, id) {
-  expect(obj).to.be.an('object').and.have.property('data');
+  expect(obj).to.be.an('object')
+  .and.have.property('data');
   expect(obj.data).to.have.property('type', type);
   expect(obj.data).to.have.property('id', id);
   return true;
@@ -108,14 +109,16 @@ describe('App', function() {
 
           // Check data.
           expect(res.body).to.have.property('data')
-            .that.is.an('array').and.have.length.of.at.least(1);
+            .that.is.an('array')
+            .and.have.length.of.at.least(1);
 
           res.body.data.every(function (movie) {
             expect(movie).to.be.an('object')
-              .and.have.property('type', 'movies');
+            .and.have.property('type', 'movies');
 
             expect(movie).to.have.property('id')
-              .that.is.a('string').and.not.empty;
+              .that.is.a('string')
+              .and.not.empty;
 
             // Check data item attributes.
             expect(movie).to.have.property('attributes')
@@ -123,12 +126,14 @@ describe('App', function() {
 
             // Every movie has to have a non-empty title.
             expect(movie.attributes).to.have.property('title')
-              .that.is.a('string').and.not.empty;
+              .that.is.a('string')
+              .and.not.empty;
 
             // Every movie has to have a date for the most recent schedule.
             expect(movie.attributes).to.have.property('mostRecentScheduleAt')
               // Verify it's a Date-compatible string.
-              .that.is.a('string').and.satisfy(validateDateString);
+              .that.is.a('string')
+              .and.satisfy(validateDateString);
 
             // Check data item relationships.
             expect(movie).to.have.property('relationships')
@@ -146,7 +151,7 @@ describe('App', function() {
             return true;
           });
 
-          // Data items has to be sorted by `mostRecentScheduleAt` in ascending order.
+          // Movies have to be sorted by `mostRecentScheduleAt` in ascending order.
           res.body.data.reduce(function (a, b) {
             var dateA = new Date(a.attributes.mostRecentScheduleAt),
                 dateB = new Date(b.attributes.mostRecentScheduleAt);
@@ -206,14 +211,16 @@ describe('App', function() {
 
           // Check data.
           expect(res.body).to.have.property('data')
-            .that.is.an('array').and.have.length.of.at.least(1);
+            .that.is.an('array')
+            .and.have.length.of.at.least(1);
 
           res.body.data.every(function (schedule) {
             expect(schedule).to.be.an('object')
             .and.have.property('type', 'schedules');
 
             expect(schedule).to.have.property('id')
-              .that.is.a('number').and.not.empty;
+              .that.is.a('number')
+              .and.not.empty;
 
             // Check data item attributes.
             expect(schedule).to.have.property('attributes')
@@ -221,7 +228,8 @@ describe('App', function() {
 
             // Every schedule has to have a start date.
             expect(schedule.attributes).to.have.property('startAt')
-              .that.is.a('string').and.satisfy(validateDateString);
+              .that.is.a('string')
+              .and.satisfy(validateDateString);
 
             // Every schedule has to have a price.
             expect(schedule.attributes).to.have.property('price')
@@ -266,7 +274,8 @@ describe('App', function() {
 
           // Check included.
           expect(res.body).to.have.property('included')
-            .that.is.an('array').and.satisfy(_.partial(validateIncludedArray, {
+            .that.is.an('array')
+            .and.satisfy(_.partial(validateIncludedArray, {
               movies: movie.id
             }));
 
