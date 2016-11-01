@@ -72,6 +72,8 @@ function validateIncludedArray (mustInclude, ary) {
 // Tests start.
 
 describe('App', function() {
+  var theMovie, theSchedule, theRoom, theSeat;
+  
 	it('should be online', function (done) {
 		chai.request(host)
       .get('/')
@@ -83,9 +85,6 @@ describe('App', function() {
         done();
       });
 	});
-
-  var savedMovies = [],
-      savedSchedules = [];
 
 	describe('/movies', function() {
 	  var selfPath;
@@ -159,15 +158,8 @@ describe('App', function() {
             return b;
           });
           
-          // Save the movies for the next tests.
-          savedMovies = res.body.data.map(function (movie) {
-            return {
-              title: movie.attributes.title,
-              id: movie.id,
-              mostRecentScheduleAt: new Date(movie.attributes.mostRecentScheduleAt),
-              scheduleLink: movie.relationships.schedules.links.self
-            };
-          });
+          // Save the movie for the next tests.
+          theMovie = res.body.data[0];
 
           done();
         });
@@ -189,11 +181,10 @@ describe('App', function() {
 	});
 
 	describe('/movies/<someMovieId>/schedules', function() {
-	  var movie, selfPath;
+	  var selfPath;
 
     before(function() {
-      movie = savedMovies[0];
-      selfPath = path.join(endpoint, 'movies', movie.id, 'schedules');
+      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules');
     });
 
     it('should list all schedules of the selected movie', function (done) {
@@ -241,12 +232,12 @@ describe('App', function() {
 
             expect(schedule.relationships).to.have.property('movie')
               .that.is.an('object')
-              .and.satisfy(_.partialRight(validateRelationObject, 'movies', movie.id));
+              .and.satisfy(_.partialRight(validateRelationObject, 'movies', theMovie.id));
 
             expect(schedule.relationships).to.have.property('rooms')
               .that.is.an('object')
               .and.have.property('links')
-                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', movie.id, 'schedules', schedule.id, 'rooms')));
+                .that.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', theMovie.id, 'schedules', schedule.id, 'rooms')));
 
             // Check data item link.
             expect(schedule).to.have.property('links')
@@ -263,20 +254,14 @@ describe('App', function() {
             return b;
           });
 
-          // Save the schedules for the next tests.
-          savedSchedules = res.body.data.map(function (schedule) {
-            return {
-              startAt: schedule.attributes.startAt,
-              id: schedule.id,
-              roomLink: schedule.relationships.rooms.links.self
-            };
-          });
+          // Save the schedule for the next tests.
+          theSchedule = res.body.data[0];
 
           // Check included.
           expect(res.body).to.have.property('included')
             .that.is.an('array')
             .and.satisfy(_.partial(validateIncludedArray, {
-              movies: movie.id
+              movies: theMovie.id
             }));
 
           done();
@@ -296,6 +281,99 @@ describe('App', function() {
         });
     });
 
+  });
+
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms', function() {
+	  var selfPath;
+
+    before(function() {
+      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms');
+    });
+
+    it('should list all rooms of the selected schedule of the selected movie');
+
+    it('should return 4** for posts', function (done) {
+      chai.request(host)
+        .post(selfPath)
+        .end(function (err, res) {
+          expect(err).to.not.be.null;
+          // statusCode should be 4**.
+          expect(getDigit(res.statusCode, 2)).to.equal(4);
+          expect(res).to.be.json;
+
+          done();
+        });
+    });
+
+  });
+  
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats[?sort&filter]', function() {
+    var selfPath;
+
+    before(function() {
+      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats');
+    });
+
+    it('should list all seats of the selected room for the selected schedule of the selected movie');
+
+    it('should return 4** for posts', function (done) {
+      chai.request(host)
+        .post(selfPath)
+        .end(function (err, res) {
+          expect(err).to.not.be.null;
+          // statusCode should be 4**.
+          expect(getDigit(res.statusCode, 2)).to.equal(4);
+          expect(res).to.be.json;
+
+          done();
+        });
+    });
+  });
+
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats/<someSeatId>', function() {
+    var selfPath;
+
+    before(function() {
+      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', theSeat.id);
+    });
+
+    it('should show availability of the selected seat of the selected room for the selected schedule of the selected movie');
+
+    it('should return 4** for posts', function (done) {
+      chai.request(host)
+        .post(selfPath)
+        .end(function (err, res) {
+          expect(err).to.not.be.null;
+          // statusCode should be 4**.
+          expect(getDigit(res.statusCode, 2)).to.equal(4);
+          expect(res).to.be.json;
+
+          done();
+        });
+    });
+  });
+
+  describe.skip('/movies/<someMovieId>/schedules/<someScheduleId>/rooms/<someRoomId>/seats/<someSeatId>/order', function() {
+    var selfPath;
+
+    before(function() {
+      selfPath = path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', theSeat.id);
+    });
+
+    it('should book the selected seat of the selected room for the selected schedule of the selected movie');
+
+    it('should return 4** for gets', function (done) {
+      chai.request(host)
+        .get(selfPath)
+        .end(function (err, res) {
+          expect(err).to.not.be.null;
+          // statusCode should be 4**.
+          expect(getDigit(res.statusCode, 2)).to.equal(4);
+          expect(res).to.be.json;
+
+          done();
+        });
+    });
   });
 
 });
