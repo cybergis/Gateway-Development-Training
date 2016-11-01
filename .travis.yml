@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - "4.6"
+
+install:
+  - curl https://install.meteor.com/ | sh
+  - export PATH="$PATH:$HOME/.meteor"
+  - npm install --global mocha
+  - npm install lodash chai chai-http
+  - cd "core-app" && meteor npm install
+  - meteor --production &
+  - while ! curl http://localhost:3000; do sleep 10; done
+
+script:
+  - mocha grader.js
