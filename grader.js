@@ -282,6 +282,20 @@ describe('App', function() {
           done();
         });
     });
+
+    it('should return 4** for posts', function (done) {
+      chai.request(host)
+        .post(selfPath)
+        .end(function (err, res) {
+          expect(err).to.not.be.null;
+          // statusCode should be 4**.
+          expect(getDigit(res.statusCode, 2)).to.equal(4);
+          expect(res).to.be.json;
+
+          done();
+        });
+    });
+
   });
 
 });
