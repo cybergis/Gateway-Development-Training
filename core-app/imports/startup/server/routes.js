@@ -453,6 +453,9 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
 RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { authRequired: false }, _.defaults({
   get () {
 
+    const routeStartTime = Date.now();
+    console.log('>> Check availability of the selected seat of the selected room for the selected schedule of the selected movie');
+
     const movieId = this.urlParams.movieId,
           scheduleId = parseInt(this.urlParams.scheduleId, 10),
           roomId = this.urlParams.roomId,
@@ -460,6 +463,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find movie.
     const cursor = Movie.find({ _id: movieId }, {});
+    console.log('Movie.find', Date.now() - routeStartTime);
 
     if (cursor.count() === 0) {
       return Response_404;
@@ -467,9 +471,11 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Only get the first one, if multiple ones exist.
     const movie = cursor.fetch()[0];
+    console.log('Movie.find.fetch', Date.now() - routeStartTime);
 
     // Find schedule.
     const schedule = movie.schedules.find((item) => Number(item.startAt) === scheduleId);
+    console.log('movie.schedules.find', Date.now() - routeStartTime);
 
     if (!schedule) {
       return Response_404;
@@ -482,6 +488,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find room.
     const room = Room.findOne({ _id: roomId });
+    console.log('Room.findOne', Date.now() - routeStartTime);
 
     if (!room) {
       return Response_404;
@@ -492,37 +499,73 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
       return Response_404;
     }
 
-    const seat = new RoomSeat({
+    const tickets = Ticket.find({
       movieId,
       scheduleId,
-      roomId,
-      seatId
-    });
+      roomId
+    }).fetch();
+    console.log('Ticket.find', Date.now() - routeStartTime);
+
+    const included = [
+      {
+        type: 'movies',
+        id: movieId,
+        attributes: movie.attributes,
+        links: {
+          self: RestApi.buildUrl('movies/:movieId', { movieId })
+        }
+      },
+      {
+        type: 'schedules',
+        id: String(scheduleId),
+        attributes: schedule.attributes,
+        links: {
+          self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
+        }
+      },
+      {
+        type: 'rooms',
+        id: roomId,
+        attributes: room.attributes,
+        links: {
+          self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId', { movieId, scheduleId, roomId })
+        }
+      }
+    ];
+    console.log('included', Date.now() - routeStartTime);
+
+    const data = {
+      type: 'seats',
+      id: String(seatId),
+      attributes: _.defaults(new RoomSeat({
+        movieId,
+        scheduleId,
+        roomId,
+        seatId
+      }).attributes, {
+        available: !tickets.some((ticket) => ticket.seatId === seatId)
+      }),
+      relationships: {
+        movie: {
+          data: { type: 'movies', id: movieId }
+        },
+        schedule: {
+          data: { type: 'schedules', id: String(scheduleId) }
+        },
+        room: {
+          data: { type: 'rooms', id: roomId }
+        }
+      },
+      links: {
+        self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { movieId, scheduleId, roomId, seatId }),
+        order: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId/order', { movieId, scheduleId, roomId, seatId })
+      }
+    };
+    console.log('data', Date.now() - routeStartTime);
 
     return {
       'statusCode': 200,
-      'body': {
-        data: {
-          type: 'seats',
-          id: String(seatId),
-          attributes: seat.attributes,
-          relationships: {
-            movie: {
-              data: { type: 'movies', id: movieId }
-            },
-            schedule: {
-              data: { type: 'schedules', id: String(scheduleId) }
-            },
-            room: {
-              data: { type: 'rooms', id: roomId }
-            }
-          },
-          links: {
-            self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { movieId, scheduleId, roomId, seatId }),
-            order: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId/order', { movieId, scheduleId, roomId, seatId })
-          }
-        }
-      }
+      'body': { data, included }
     };
   }
 }, API_Base));
