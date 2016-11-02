@@ -87,6 +87,7 @@ function validateIncludedArray (mustInclude, ary)
 describe('App', function ()
 {
   var theMovie, theSchedule, theRoom, theSeat;
+  var allSeats = [];
 
   it('should be online', function (done)
   {
@@ -1107,6 +1108,7 @@ describe('App', function ()
 
               // Save the room for the next tests.
               theSeat = response.body.data[0];
+              allSeats = response.body.data;
             });
 
             it('should have at least 400 items', function ()
@@ -1148,6 +1150,7 @@ describe('App', function ()
   describe('check availability of the selected seat of the selected room for the selected schedule of the selected movie', function ()
   {
     var selfPath, response;
+    var allResponse = [];
 
     before(function ()
     {
@@ -1187,14 +1190,49 @@ describe('App', function ()
           });
       });
 
+      it('should respond 200 JSON for all seats', function (done)
+      {
+        // Downloading all 400 seats may take a while.
+        this.timeout(100 * allSeats.length); // Give 100 ms for each download.
+
+        var downloadIndex = 0;
+        var downloadNext = function () {
+          var theSeat = allSeats[downloadIndex];
+
+
+          chai.request(host)
+            .get(path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', theSeat.id))
+            .end(function (err, res)
+            {
+              expect(err).to.be.null;
+              expect(res).to.have.status(200);
+              expect(res).to.be.json;
+
+              allResponse[downloadIndex] = res;
+              downloadIndex++;
+
+              if (downloadIndex >= allSeats.length) {
+                done();
+              } else {
+                downloadNext();
+              }
+            });
+        };
+
+        downloadNext();
+      });
+
     });
 
-    describe('response', function ()
+    describe('response (of all)', function ()
     {
 
       it('should have an object in body', function ()
       {
-        expect(response).to.be.an('object');
+        allResponse.forEach(function (response)
+        {
+          expect(response).to.be.an('object');
+        });
       });
 
       describe('response body', function ()
@@ -1202,7 +1240,10 @@ describe('App', function ()
 
         it('should have property "data"', function ()
         {
-          expect(response.body).to.have.property('data');
+          allResponse.forEach(function (response)
+          {
+            expect(response.body).to.have.property('data');
+          });
         });
 
         describe('data', function ()
@@ -1210,21 +1251,30 @@ describe('App', function ()
 
           it('should be an object with type "seats"', function ()
           {
-            expect(response.body.data).to.be.an('object')
-            .and.have.property('type', 'seats');
+            allResponse.forEach(function (response)
+            {
+              expect(response.body.data).to.be.an('object')
+              .and.have.property('type', 'seats');
+            });
           });
 
           it('should have a string type property "id" that is not empty', function ()
           {
-            expect(response.body.data).to.have.property('id')
-              .that.is.a('string')
-              .and.not.empty;
+            allResponse.forEach(function (response)
+            {
+              expect(response.body.data).to.have.property('id')
+                .that.is.a('string')
+                .and.not.empty;
+            });
           });
 
           it('should have an object type property "attributes"', function ()
           {
-            expect(response.body.data).to.have.property('attributes')
-              .that.is.an('object');
+            allResponse.forEach(function (response)
+            {
+              expect(response.body.data).to.have.property('attributes')
+                .that.is.an('object');
+            });
           });
 
           describe('property "attributes"', function ()
@@ -1232,37 +1282,52 @@ describe('App', function ()
 
             it('should have a number type property "number"', function ()
             {
-              expect(response.body.data.attributes).to.have.property('number')
-                .that.is.a('number')
-                .and.is.above(0);
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.attributes).to.have.property('number')
+                  .that.is.a('number')
+                  .and.is.above(0);
+              });
             });
 
             it('should have a number type property "row"', function ()
             {
-              expect(response.body.data.attributes).to.have.property('row')
-                .that.is.a('number')
-                .and.is.above(0);
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.attributes).to.have.property('row')
+                  .that.is.a('number')
+                  .and.is.above(0);
+              });
             });
 
             it('should have a number type property "column"', function ()
             {
-              expect(response.body.data.attributes).to.have.property('column')
-                .that.is.a('number')
-                .and.is.above(0);
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.attributes).to.have.property('column')
+                  .that.is.a('number')
+                  .and.is.above(0);
+              });
             });
 
             it('should have a boolean type property "available"', function ()
             {
-              expect(response.body.data.attributes).to.have.property('available')
-                .that.is.a('boolean');
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.attributes).to.have.property('available')
+                  .that.is.a('boolean');
+              });
             });
 
           });
 
           it('should have an object type property "relationships"', function ()
           {
-            expect(response.body.data).to.have.property('relationships')
-              .that.is.an('object');
+            allResponse.forEach(function (response)
+            {
+              expect(response.body.data).to.have.property('relationships')
+                .that.is.an('object');
+            });
           });
 
           describe('property "relationships"', function ()
@@ -1270,31 +1335,43 @@ describe('App', function ()
 
             it('should have an object type property "movie" that points to the movie', function ()
             {
-              expect(response.body.data.relationships).to.have.property('movie')
-                .that.is.an('object')
-                .and.satisfy(_.partialRight(validateRelationObject, 'movies', theMovie.id));
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.relationships).to.have.property('movie')
+                  .that.is.an('object')
+                  .and.satisfy(_.partialRight(validateRelationObject, 'movies', theMovie.id));
+              });
             });
 
             it('should have an object type property "schedule" that points to the schedule', function ()
             {
-              expect(response.body.data.relationships).to.have.property('schedule')
-                .that.is.an('object')
-                .and.satisfy(_.partialRight(validateRelationObject, 'schedules', theSchedule.id));
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.relationships).to.have.property('schedule')
+                  .that.is.an('object')
+                  .and.satisfy(_.partialRight(validateRelationObject, 'schedules', theSchedule.id));
+              });
             });
 
             it('should have an object type property "room" that points to the room', function ()
             {
-              expect(response.body.data.relationships).to.have.property('room')
-                .that.is.an('object')
-                .and.satisfy(_.partialRight(validateRelationObject, 'rooms', theRoom.id));
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.relationships).to.have.property('room')
+                  .that.is.an('object')
+                  .and.satisfy(_.partialRight(validateRelationObject, 'rooms', theRoom.id));
+              });
             });
 
           });
 
           it('should have an object type property "links"', function ()
           {
-            expect(response.body.data).to.have.property('links')
-              .that.is.an('object');
+            allResponse.forEach(function (response)
+            {
+              expect(response.body.data).to.have.property('links')
+                .that.is.an('object');
+            });
           });
 
           describe('property "links"', function ()
@@ -1302,14 +1379,20 @@ describe('App', function ()
 
             it('should point to the item', function ()
             {
-              expect(response.body.data.links).to.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', response.body.data.id)));
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.links).to.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', response.body.data.id)));
+              });
             });
 
             it('should point to the order page', function ()
             {
-              expect(response.body.data.links).to.have.property('order')
-              .that.is.a('string');
-              expect(url.parse(response.body.data.links.order).pathname).to.equal(path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', response.body.data.id, 'order'));
+              allResponse.forEach(function (response)
+              {
+                expect(response.body.data.links).to.have.property('order')
+                .that.is.a('string');
+                expect(url.parse(response.body.data.links.order).pathname).to.equal(path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', response.body.data.id, 'order'));
+              });
             });
 
           });
@@ -1318,7 +1401,10 @@ describe('App', function ()
 
         it('should have property "included"', function ()
         {
-          expect(response.body).to.have.property('included');
+          allResponse.forEach(function (response)
+          {
+            expect(response.body).to.have.property('included');
+          });
         });
 
         describe('included', function ()
@@ -1326,12 +1412,15 @@ describe('App', function ()
 
           it('should be a list that contains the movie, the schedule and the room', function ()
           {
-            expect(response.body.included).to.be.an('array')
-            .and.satisfy(_.partial(validateIncludedArray, {
-              movies: theMovie.id,
-              schedules: theSchedule.id,
-              rooms: theRoom.id
-            }));
+            allResponse.forEach(function (response)
+            {
+              expect(response.body.included).to.be.an('array')
+              .and.satisfy(_.partial(validateIncludedArray, {
+                movies: theMovie.id,
+                schedules: theSchedule.id,
+                rooms: theRoom.id
+              }));
+            });
           });
 
         });
