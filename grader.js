@@ -1139,7 +1139,7 @@ describe('App', function ()
 
   });
 
-  describe.skip('check availability of the selected seat of the selected room for the selected schedule of the selected movie', function ()
+  describe('check availability of the selected seat of the selected room for the selected schedule of the selected movie', function ()
   {
     var selfPath, response;
 
@@ -1194,21 +1194,6 @@ describe('App', function ()
       describe('response body', function ()
       {
 
-        it('should have property "links"', function ()
-        {
-          expect(response.body).to.have.property('links');
-        });
-
-        describe('links', function ()
-        {
-
-          it('should point to this page', function ()
-          {
-            expect(response.body.links).to.satisfy(_.partialRight(validateSelfLink, selfPath));
-          });
-
-        });
-
         it('should have property "data"', function ()
         {
           expect(response.body).to.have.property('data');
@@ -1230,42 +1215,96 @@ describe('App', function ()
               .and.not.empty;
           });
 
-          it('should have an object type property "attributes"');
+          it('should have an object type property "attributes"', function ()
+          {
+            expect(response.body.data).to.have.property('attributes')
+              .that.is.an('object');
+          });
 
           describe('property "attributes"', function ()
           {
 
-            it('should have a number type property "number"');
+            it('should have a number type property "number"', function ()
+            {
+              expect(response.body.data.attributes).to.have.property('number')
+                .that.is.a('number')
+                .and.is.above(0);
+            });
 
-            it('should have a number type property "row"');
+            it('should have a number type property "row"', function ()
+            {
+              expect(response.body.data.attributes).to.have.property('row')
+                .that.is.a('number')
+                .and.is.above(0);
+            });
 
-            it('should have a number type property "column"');
+            it('should have a number type property "column"', function ()
+            {
+              expect(response.body.data.attributes).to.have.property('column')
+                .that.is.a('number')
+                .and.is.above(0);
+            });
 
-            it('should have a boolean type property "available"');
+            it('should have a boolean type property "available"', function ()
+            {
+              expect(response.body.data.attributes).to.have.property('available')
+                .that.is.a('boolean');
+            });
 
           });
 
-          it('should have an object type property "relationships"');
+          it('should have an object type property "relationships"', function ()
+          {
+            expect(response.body.data).to.have.property('relationships')
+              .that.is.an('object');
+          });
 
           describe('property "relationships"', function ()
           {
 
-            it('should have an object type property "movie" that points to the movie');
+            it('should have an object type property "movie" that points to the movie', function ()
+            {
+              expect(response.body.data.relationships).to.have.property('movie')
+                .that.is.an('object')
+                .and.satisfy(_.partialRight(validateRelationObject, 'movies', theMovie.id));
+            });
 
-            it('should have an object type property "schedule" that points to the schedule');
+            it('should have an object type property "schedule" that points to the schedule', function ()
+            {
+              expect(response.body.data.relationships).to.have.property('schedule')
+                .that.is.an('object')
+                .and.satisfy(_.partialRight(validateRelationObject, 'schedules', theSchedule.id));
+            });
 
-            it('should have an object type property "room" that points to the room');
+            it('should have an object type property "room" that points to the room', function ()
+            {
+              expect(response.body.data.relationships).to.have.property('room')
+                .that.is.an('object')
+                .and.satisfy(_.partialRight(validateRelationObject, 'rooms', theRoom.id));
+            });
 
           });
 
-          it('should have an object type property "links"');
+          it('should have an object type property "links"', function ()
+          {
+            expect(response.body.data).to.have.property('links')
+              .that.is.an('object');
+          });
 
           describe('property "links"', function ()
           {
 
-            it('should point to the item');
+            it('should point to the item', function ()
+            {
+              expect(response.body.data.links).to.satisfy(_.partialRight(validateSelfLink, path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', response.body.data.id)));
+            });
 
-            it('should point to the order page');
+            it('should point to the order page', function ()
+            {
+              expect(response.body.data.links).to.have.property('order')
+              .that.is.a('string');
+              expect(url.parse(response.body.data.links.order).pathname).to.equal(path.join(endpoint, 'movies', theMovie.id, 'schedules', theSchedule.id, 'rooms', theRoom.id, 'seats', response.body.data.id, 'order'));
+            });
 
           });
 
