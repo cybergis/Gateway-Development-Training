@@ -499,11 +499,12 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
       return Response_404;
     }
 
-    const tickets = Ticket.find({
+    const available = Ticket.find({
       movieId,
       scheduleId,
-      roomId
-    }).fetch();
+      roomId,
+      seatId
+    }).count() === 0
     console.log('Ticket.find', Date.now() - routeStartTime);
 
     const included = [
@@ -542,9 +543,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
         scheduleId,
         roomId,
         seatId
-      }).attributes, {
-        available: !tickets.some((ticket) => ticket.seatId === seatId)
-      }),
+      }).attributes, { available }),
       relationships: {
         movie: {
           data: { type: 'movies', id: movieId }
@@ -574,6 +573,9 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId/order', { authRequired: false }, _.defaults({
   post () {
 
+    const routeStartTime = Date.now();
+    console.log('>> Book the selected seat of the selected room for the selected schedule of the selected movie');
+
     const movieId = this.urlParams.movieId,
           scheduleId = parseInt(this.urlParams.scheduleId, 10),
           roomId = this.urlParams.roomId,
@@ -581,6 +583,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find movie.
     const cursor = Movie.find({ _id: movieId }, {});
+    console.log('Movie.find', Date.now() - routeStartTime);
 
     if (cursor.count() === 0) {
       return Response_404;
@@ -588,9 +591,11 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Only get the first one, if multiple ones exist.
     const movie = cursor.fetch()[0];
+    console.log('Movie.find.fetch', Date.now() - routeStartTime);
 
     // Find schedule.
     const schedule = movie.schedules.find((item) => Number(item.startAt) === scheduleId);
+    console.log('movie.schedules.find', Date.now() - routeStartTime);
 
     if (!schedule) {
       return Response_404;
@@ -603,6 +608,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find room.
     const room = Room.findOne({ _id: roomId });
+    console.log('Room.findOne', Date.now() - routeStartTime);
 
     if (!room) {
       return Response_404;
@@ -620,9 +626,16 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
       seatId
     });
 
+    const available = Ticket.find({
+      movieId,
+      scheduleId,
+      roomId,
+      seatId
+    }).count() === 0
+    console.log('Ticket.find', Date.now() - routeStartTime);
 
     // Check if seat is available.
-    if (!seat.attributes.available) {
+    if (!available) {
       return {
         'statusCode': 409,
         'body': 'Seat not available.'
