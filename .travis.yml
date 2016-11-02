@@ -2,9 +2,8 @@ language: node_js
 node_js:
   - "0.10"
 
-# install:
+install:
+  - . setup.sh
 
 script:
-  - . setup.sh
-#  - mocha grader.js
-  - echo "Hello World!"
+  - mocha grader.js
