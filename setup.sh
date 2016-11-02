@@ -31,10 +31,12 @@ npm install --global mocha
 npm install lodash chai chai-http
 
 # Setup app.
-cd "core-app" && meteor npm install
-
-# Run app in background.
-meteor --production &
+(
+  cd "core-app"
+  meteor npm install
+  # Run app in background.
+  meteor --production &
+)
 
 # Wait till the app is online.
 while ! curl http://localhost:3000; do sleep 10; done
