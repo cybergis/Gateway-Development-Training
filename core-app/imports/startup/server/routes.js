@@ -41,7 +41,7 @@ RestApi.addRoute('tickets', { authRequired: false }, _.defaults({
               data: { type: 'rooms', id: roomId }
             },
             seat: {
-              data: { type: 'seats', id: seatId }
+              data: { type: 'seats', id: String(seatId) }
             }
           },
           links: {
@@ -413,7 +413,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
     const data = _.times(room.attributes.seatsCount, (seatId) => ({
       // Index/seatId is 0-based. Seat Number is 1-based.
       type: 'seats',
-      id: seatId,
+      id: String(seatId),
       attributes: _.defaults(new RoomSeat({
         movieId,
         scheduleId,
@@ -504,7 +504,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
       'body': {
         data: {
           type: 'seats',
-          id: seatId,
+          id: String(seatId),
           attributes: seat.attributes,
           relationships: {
             movie: {
@@ -639,7 +639,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
               data: { type: 'rooms', id: roomId }
             },
             seat: {
-              data: { type: 'seats', id: seatId }
+              data: { type: 'seats', id: String(seatId) }
             }
           },
           links: {
@@ -673,7 +673,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
           },
           {
             type: 'seats',
-            id: seatId,
+            id: String(seatId),
             attributes: seat.attributes,
             links: {
               self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { movieId, scheduleId, roomId, seatId })
