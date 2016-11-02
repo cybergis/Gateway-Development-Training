@@ -1109,6 +1109,12 @@ describe('App', function ()
               theSeat = response.body.data[0];
             });
 
+            it('should have at least 400 items', function ()
+            {
+              expect(response.body.data).to.be.an('array')
+              .and.have.length.of.at.least(400);
+            });
+
           });
 
         });
