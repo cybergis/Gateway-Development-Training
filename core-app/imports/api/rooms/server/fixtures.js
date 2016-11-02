@@ -6,10 +6,11 @@ Meteor.startup(() => {
 
     console.log('Rooms/fixture', 'Initializing data...');
 
-    var theOnlyRoom = new Room();
-    theOnlyRoom.title = 'The Only Room on Earth';
-    theOnlyRoom.rows = 20;
-    theOnlyRoom.columns = 20;
+    var theOnlyRoom = new Room({
+      title: 'The Only Room on Earth',
+      rows: 20,
+      columns: 20
+    });
     theOnlyRoom.save();
 
   }

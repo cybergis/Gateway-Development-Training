@@ -35,13 +35,13 @@ RestApi.addRoute('tickets', { authRequired: false }, _.defaults({
               data: { type: 'movies', id: movieId }
             },
             schedule: {
-              data: { type: 'schedules', id: scheduleId }
+              data: { type: 'schedules', id: String(scheduleId) }
             },
             room: {
               data: { type: 'rooms', id: roomId }
             },
             seat: {
-              data: { type: 'seats', id: seatId }
+              data: { type: 'seats', id: String(seatId) }
             }
           },
           links: {
@@ -171,7 +171,7 @@ RestApi.addRoute('movies/:movieId/schedules', { authRequired: false }, _.default
     const data = movie.schedules
     .map(({ _id, attributes }) => ({
       type: 'schedules',
-      id: _id,
+      id: String(_id),
       attributes,
       relationships: {
         movie: {
@@ -244,7 +244,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms', { authRequired: 
             },
             {
               type: 'schedules',
-              id: scheduleId,
+              id: String(scheduleId),
               attributes: schedule.attributes,
               links: {
                 self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
@@ -272,7 +272,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms', { authRequired: 
             data: { type: 'movies', id: movieId }
           },
           schedule: {
-            data: { type: 'schedules', id: scheduleId }
+            data: { type: 'schedules', id: String(scheduleId) }
           },
           seats: {
             links: {
@@ -361,7 +361,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
             },
             {
               type: 'schedules',
-              id: scheduleId,
+              id: String(scheduleId),
               attributes: schedule.attributes,
               links: {
                 self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
@@ -413,7 +413,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
     const data = _.times(room.attributes.seatsCount, (seatId) => ({
       // Index/seatId is 0-based. Seat Number is 1-based.
       type: 'seats',
-      id: seatId,
+      id: String(seatId),
       attributes: _.defaults(new RoomSeat({
         movieId,
         scheduleId,
@@ -427,7 +427,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
           data: { type: 'movies', id: movieId }
         },
         schedule: {
-          data: { type: 'schedules', id: scheduleId }
+          data: { type: 'schedules', id: String(scheduleId) }
         },
         room: {
           data: { type: 'rooms', id: roomId }
@@ -453,6 +453,9 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats', { 
 RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { authRequired: false }, _.defaults({
   get () {
 
+    const routeStartTime = Date.now();
+    console.log('>> Check availability of the selected seat of the selected room for the selected schedule of the selected movie');
+
     const movieId = this.urlParams.movieId,
           scheduleId = parseInt(this.urlParams.scheduleId, 10),
           roomId = this.urlParams.roomId,
@@ -460,6 +463,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find movie.
     const cursor = Movie.find({ _id: movieId }, {});
+    console.log('Movie.find', Date.now() - routeStartTime);
 
     if (cursor.count() === 0) {
       return Response_404;
@@ -467,9 +471,11 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Only get the first one, if multiple ones exist.
     const movie = cursor.fetch()[0];
+    console.log('Movie.find.fetch', Date.now() - routeStartTime);
 
     // Find schedule.
     const schedule = movie.schedules.find((item) => Number(item.startAt) === scheduleId);
+    console.log('movie.schedules.find', Date.now() - routeStartTime);
 
     if (!schedule) {
       return Response_404;
@@ -482,6 +488,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find room.
     const room = Room.findOne({ _id: roomId });
+    console.log('Room.findOne', Date.now() - routeStartTime);
 
     if (!room) {
       return Response_404;
@@ -492,37 +499,72 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
       return Response_404;
     }
 
-    const seat = new RoomSeat({
+    const available = Ticket.find({
       movieId,
       scheduleId,
       roomId,
       seatId
-    });
+    }).count() === 0
+    console.log('Ticket.find', Date.now() - routeStartTime);
+
+    const included = [
+      {
+        type: 'movies',
+        id: movieId,
+        attributes: movie.attributes,
+        links: {
+          self: RestApi.buildUrl('movies/:movieId', { movieId })
+        }
+      },
+      {
+        type: 'schedules',
+        id: String(scheduleId),
+        attributes: schedule.attributes,
+        links: {
+          self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
+        }
+      },
+      {
+        type: 'rooms',
+        id: roomId,
+        attributes: room.attributes,
+        links: {
+          self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId', { movieId, scheduleId, roomId })
+        }
+      }
+    ];
+    console.log('included', Date.now() - routeStartTime);
+
+    const data = {
+      type: 'seats',
+      id: String(seatId),
+      attributes: _.defaults(new RoomSeat({
+        movieId,
+        scheduleId,
+        roomId,
+        seatId
+      }).attributes, { available }),
+      relationships: {
+        movie: {
+          data: { type: 'movies', id: movieId }
+        },
+        schedule: {
+          data: { type: 'schedules', id: String(scheduleId) }
+        },
+        room: {
+          data: { type: 'rooms', id: roomId }
+        }
+      },
+      links: {
+        self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { movieId, scheduleId, roomId, seatId }),
+        order: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId/order', { movieId, scheduleId, roomId, seatId })
+      }
+    };
+    console.log('data', Date.now() - routeStartTime);
 
     return {
       'statusCode': 200,
-      'body': {
-        data: {
-          type: 'seats',
-          id: seatId,
-          attributes: seat.attributes,
-          relationships: {
-            movie: {
-              data: { type: 'movies', id: movieId }
-            },
-            schedule: {
-              data: { type: 'schedules', id: scheduleId }
-            },
-            room: {
-              data: { type: 'rooms', id: roomId }
-            }
-          },
-          links: {
-            self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { movieId, scheduleId, roomId, seatId }),
-            order: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId/order', { movieId, scheduleId, roomId, seatId })
-          }
-        }
-      }
+      'body': { data, included }
     };
   }
 }, API_Base));
@@ -531,6 +573,9 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId/order', { authRequired: false }, _.defaults({
   post () {
 
+    const routeStartTime = Date.now();
+    console.log('>> Book the selected seat of the selected room for the selected schedule of the selected movie');
+
     const movieId = this.urlParams.movieId,
           scheduleId = parseInt(this.urlParams.scheduleId, 10),
           roomId = this.urlParams.roomId,
@@ -538,6 +583,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find movie.
     const cursor = Movie.find({ _id: movieId }, {});
+    console.log('Movie.find', Date.now() - routeStartTime);
 
     if (cursor.count() === 0) {
       return Response_404;
@@ -545,9 +591,11 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Only get the first one, if multiple ones exist.
     const movie = cursor.fetch()[0];
+    console.log('Movie.find.fetch', Date.now() - routeStartTime);
 
     // Find schedule.
     const schedule = movie.schedules.find((item) => Number(item.startAt) === scheduleId);
+    console.log('movie.schedules.find', Date.now() - routeStartTime);
 
     if (!schedule) {
       return Response_404;
@@ -560,6 +608,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
 
     // Find room.
     const room = Room.findOne({ _id: roomId });
+    console.log('Room.findOne', Date.now() - routeStartTime);
 
     if (!room) {
       return Response_404;
@@ -577,9 +626,16 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
       seatId
     });
 
+    const available = Ticket.find({
+      movieId,
+      scheduleId,
+      roomId,
+      seatId
+    }).count() === 0
+    console.log('Ticket.find', Date.now() - routeStartTime);
 
     // Check if seat is available.
-    if (!seat.attributes.available) {
+    if (!available) {
       return {
         'statusCode': 409,
         'body': 'Seat not available.'
@@ -633,13 +689,13 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
               data: { type: 'movies', id: movieId }
             },
             schedule: {
-              data: { type: 'schedules', id: scheduleId }
+              data: { type: 'schedules', id: String(scheduleId) }
             },
             room: {
               data: { type: 'rooms', id: roomId }
             },
             seat: {
-              data: { type: 'seats', id: seatId }
+              data: { type: 'seats', id: String(seatId) }
             }
           },
           links: {
@@ -657,7 +713,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
           },
           {
             type: 'schedules',
-            id: scheduleId,
+            id: String(scheduleId),
             attributes: schedule.attributes,
             links: {
               self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId', { movieId, scheduleId })
@@ -673,7 +729,7 @@ RestApi.addRoute('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:sea
           },
           {
             type: 'seats',
-            id: seatId,
+            id: String(seatId),
             attributes: seat.attributes,
             links: {
               self: RestApi.buildUrl('movies/:movieId/schedules/:scheduleId/rooms/:roomId/seats/:seatId', { movieId, scheduleId, roomId, seatId })
