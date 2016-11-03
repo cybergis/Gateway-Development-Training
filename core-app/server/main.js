@@ -23,7 +23,7 @@ Meteor.startup(() => {
     if (!Plays.findOne()) {
         var seats = [];
         var plays = [];
-        for (var i=0; i<2; i++) {
+        for (var i=0; i<12; i++) {
             Plays.insert({
                 movie_id: 0,
                 title: "Title",
@@ -40,9 +40,10 @@ Meteor.startup(() => {
     }
 
     if (!Tickets.findOne()) {
-        for (var i=0; i<2; i++) {
+        for (var i=0; i<12; i++) {
             for (var j=0; j<400; j++) {
-                    movie_id:0,
+		Tickets.insert({
+                    movie_id: 0,
                     seat_id: i*400+j,
                     number:j,
                     row:Math.floor(j/20)+1,
@@ -52,6 +53,7 @@ Meteor.startup(() => {
                     room_id: 0,
                     firstName: '',
                     lastName: ''
+		});
             }
         }
     }
