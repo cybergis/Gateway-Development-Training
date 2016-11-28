@@ -31,55 +31,57 @@ function validateDateString (str)
   return (new Date(str)).toJSON() === str;
 }
 
-function validateSelfLink (obj, expectedSelfPath)
+function getAllItems (done)
 {
-  expect(obj).to.be.an('object')
-  .and.have.property('self');
-  expect(obj.self).to.be.a('string')
-  .and.not.empty;
-  if (typeof expectedSelfPath !== 'undefined')
-  {
-    expect(url.parse(obj.self).pathname).to.equal(expectedSelfPath);
-  }
-  return true;
-}
-
-function validateRelationObject (obj, type, id)
-{
-  expect(obj).to.be.an('object')
-  .and.have.property('data');
-  expect(obj.data).to.have.property('type', type);
-  expect(obj.data).to.have.property('id', id);
-  return true;
-}
-
-/**
- * @param {Object.<Type, ID>} mustInclude
- * @param {Array} ary
- * @return {boolean}
- */
-function validateIncludedArray (mustInclude, ary)
-{
-  expect(ary).to.be.an('array');
-  var counts = {};
-  Object.keys(mustInclude).forEach(function (type)
-  {
-    counts[type] = 0;
-  });
-  ary.forEach(function (obj)
-  {
-    expect(obj).to.be.an('object');
-    if (typeof counts[obj.type] !== 'undefined' && obj.id === mustInclude[obj.type])
+  chai.request(host)
+    .get(path.join(endpoint, 'items'))
+    .end(function (err, res)
     {
-      counts[obj.type]++;
-    }
-  });
-  expect(Object.keys(counts).every(function (type)
-  {
-    return counts[type] === 1;
-  })).to.be.true;
+      try
+      {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        expect(res).to.be.json;
 
-  return true;
+        expect(res.body).to.be.an('object')
+          .that.has.property('data')
+            .that.is.an('array');
+
+        done(null, res.body.data);
+      }
+      catch (e)
+      {
+        done(e, null);
+      }
+    });
+}
+
+function getItem (itemId, done)
+{
+  chai.request(host)
+    .get(path.join(endpoint, 'items', itemId))
+    .end(function (err, res)
+    {
+      try
+      {
+        expect(err).to.be.null;
+        // statusCode should be 2**.
+        expect(getDigit(res.statusCode, 2)).to.equal(2);
+        expect(res).to.be.json;
+
+        expect(res.body).to.be.an('object')
+        .and.has.property('data')
+          .that.is.an('object')
+          .and.has.property('id')
+            .that.equal(itemId);
+
+        done(null, res.body.data);
+      }
+      catch (e)
+      {
+        done(e, null);
+      }
+    });
 }
 
 // Tests start below.
@@ -103,163 +105,119 @@ describe('App', function ()
       });
   });
 
-  describe('list all items', function ()
+  describe('GETing /items', function ()
   {
-    var selfPath, response;
+    var allItems;
 
-    before(function ()
+    before(function (done)
     {
-      selfPath = path.join(endpoint, 'items');
-    });
-
-    describe('Endpoint', function ()
-    {
-
-      it('should respond 200 JSON for get requests', function (done)
+      getAllItems(function (err, items)
       {
-        chai.request(host)
-          .get(selfPath)
-          .end(function (err, res)
-          {
-            expect(err).to.be.null;
-            expect(res).to.have.status(200);
-            expect(res).to.be.json;
+        expect(err).to.be.null;
 
-            response = res;
-            done();
-          });
+        allItems = items;
+
+        done();
       });
-
     });
 
     describe('response', function ()
     {
 
-      it('should have an object in body', function ()
+      it('should have at least one item', function ()
       {
-        expect(response).to.be.an('object');
+        expect(allItems).to.have.length.of.at.least(1);
+
+        itemCountBeforeAdd = allItems.length;
       });
 
-      describe('response body', function ()
+      describe('every item', function ()
       {
 
-        it('should have property "data"', function ()
-        {
-          expect(response.body).to.have.property('data');
+        before(function() {
+          expect(allItems).to.have.length.of.at.least(1);
         });
 
-        describe('data', function ()
+        it('should be an object with type "items"', function ()
+        {
+          allItems.forEach(function (item)
+          {
+            expect(item).to.be.an('object')
+            .and.have.property('type', 'items');
+          });
+        });
+
+        it('should have a string type property "id" that is not empty', function ()
+        {
+          allItems.forEach(function (item)
+          {
+            expect(item).to.have.property('id')
+              .that.is.a('string')
+              .and.not.empty;
+          });
+        });
+
+        it('should have an object type property "attributes"', function ()
+        {
+          allItems.forEach(function (item)
+          {
+            expect(item).to.have.property('attributes')
+              .that.is.an('object');
+          });
+        });
+
+        describe('property "attributes"', function ()
         {
 
-          it('should be a list with at least one item', function ()
+          it('should have a string type property "createdAt" that represents a date', function ()
           {
-            expect(response.body.data).to.be.an('array')
-            .and.have.length.of.at.least(1);
-
-            itemCountBeforeAdd = response.body.data.length;
+            allItems.forEach(function (item)
+            {
+              expect(item.attributes).to.have.property('createdAt')
+                // Verify it's a Date-compatible string.
+                .that.is.a('string')
+                .and.satisfy(validateDateString);
+            });
           });
 
-          describe('every item', function ()
-          {
+        });
 
-            before(function() {
-              expect(response.body.data).to.be.an('array')
-              .and.have.length.of.at.least(1);
-            });
+      });
 
-            it('should be an object with type "items"', function ()
+      describe('all items', function ()
+      {
+
+        before(function() {
+          expect(allItems).to.have.length.of.at.least(1);
+        });
+
+        it('should be accessible', function (done)
+        {
+          // Requesting for all 400 seats may take a while.
+          this.timeout(100 * allItems.length); // Give 100 ms for each request.
+
+          var requestIndex = 0;
+          var requestNext = function () {
+            var theItem = allItems[requestIndex];
+
+            getItem(theItem.id, function (err, item)
             {
-              response.body.data.forEach(function (item)
+              expect(err).to.be.null;
+
+              requestIndex++;
+
+              if (requestIndex >= allItems.length)
               {
-                expect(item).to.be.an('object')
-                .and.have.property('type', 'items');
-              });
-            });
-
-            it('should have a string type property "id" that is not empty', function ()
-            {
-              response.body.data.forEach(function (item)
+                done();
+              }
+              else
               {
-                expect(item).to.have.property('id')
-                  .that.is.a('string')
-                  .and.not.empty;
-              });
+                requestNext();
+              }
             });
+          };
 
-            it('should have an object type property "attributes"', function ()
-            {
-              response.body.data.forEach(function (item)
-              {
-                expect(item).to.have.property('attributes')
-                  .that.is.an('object');
-              });
-            });
-
-            describe('property "attributes"', function ()
-            {
-
-              it('should have a string type property "createdAt" that represents a date', function ()
-              {
-                response.body.data.forEach(function (item)
-                {
-                  expect(item.attributes).to.have.property('createdAt')
-                    // Verify it's a Date-compatible string.
-                    .that.is.a('string')
-                    .and.satisfy(validateDateString);
-                });
-              });
-
-            });
-
-          });
-
-          describe('all items', function ()
-          {
-
-            var allItems;
-
-            before(function() {
-              expect(response.body.data).to.be.an('array')
-              .and.have.length.of.at.least(1);
-
-              allItems = response.body.data;
-            });
-
-            it('should be accessible', function (done)
-            {
-              // Requesting for all 400 seats may take a while.
-              this.timeout(100 * allItems.length); // Give 100 ms for each request.
-
-              var requestIndex = 0;
-              var requestNext = function () {
-                var theItem = allItems[requestIndex];
-
-                chai.request(host)
-                  .get(path.join(endpoint, 'items', theItem.id))
-                  .end(function (err, res)
-                  {
-                    expect(err).to.be.null;
-                    // statusCode should be 2**.
-                    expect(getDigit(res.statusCode, 2)).to.equal(2);
-                    expect(res).to.be.json;
-
-                    expect(res.body.data.id).to.equal(theItem.id);
-
-                    requestIndex++;
-
-                    if (requestIndex >= allItems.length) {
-                      done();
-                    } else {
-                      requestNext();
-                    }
-                  });
-              };
-
-              requestNext();
-            });
-
-          });
-
+          requestNext();
         });
 
       });
@@ -268,7 +226,7 @@ describe('App', function ()
 
   });
 
-  describe('Posting to /items', function ()
+  describe('POSTing /items', function ()
   {
     var selfPath, newSecrets, newItems;
 
@@ -276,10 +234,11 @@ describe('App', function ()
     {
       selfPath = path.join(endpoint, 'items');
 
+      // Prepare new items.
       newSecrets = [];
       var newItemCount = Math.floor(5 + Math.random() * 5);
       for (var i = 0, n = newItemCount; i < n; ++i) {
-        newSecrets.push(String(Math.random()));
+        newSecrets.push(String(1 + Math.random()));
       }
 
       newItems = [];
@@ -320,9 +279,12 @@ describe('App', function ()
 
             requestIndex++;
 
-            if (requestIndex >= newSecrets.length) {
+            if (requestIndex >= newSecrets.length)
+            {
               done();
-            } else {
+            }
+            else
+            {
               requestNext();
             }
           });
@@ -333,27 +295,20 @@ describe('App', function ()
 
     it('list should contain new items', function (done)
     {
-      chai.request(host)
-        .get(selfPath)
-        .end(function (err, res)
-        {
-          expect(err).to.be.null;
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
+      getAllItems(function (err, items)
+      {
+        expect(err).to.be.null;
 
-          expect(res.body.data).to.be.an('array')
-          .and.have.length.of.at.least(1);
+        expect(items.length).to.equal(itemCountBeforeAdd + newItems.length);
 
-          expect(res.body.data.length).to.equal(itemCountBeforeAdd + newItems.length);
+        expect(newItems.every(function (item1) {
+          return items.some(function (item2) {
+            return item1.id === item2.id;
+          });
+        })).to.be.true;
 
-          expect(newItems.every(function (item1) {
-            return res.body.data.some(function (item2) {
-              return item1.id === item2.id;
-            });
-          })).to.be.true;
-
-          done();
-        });
+        done();
+      });
     });
 
     it('new items should be accessible', function (done)
@@ -365,8 +320,61 @@ describe('App', function ()
       var requestNext = function () {
         var theItem = newItems[requestIndex];
 
+        getItem(theItem.id, function (err, item)
+        {
+          expect(err).to.be.null;
+
+          requestIndex++;
+
+          if (requestIndex >= newItems.length)
+          {
+            done();
+          }
+          else
+          {
+            requestNext();
+          }
+        })
+      };
+
+      requestNext();
+    });
+
+  });
+
+  describe('PUTing /items/SomeID', function ()
+  {
+    var allItems;
+
+    before(function (done)
+    {
+      getAllItems(function (err, items)
+      {
+        expect(err).to.be.null;
+
+        allItems = items;
+
+        done();
+      });
+    });
+
+    it('should update the item', function (done)
+    {
+      // Requesting for all 400 seats may take a while.
+      this.timeout(100 * allItems.length); // Give 100 ms for each request.
+
+      var requestIndex = 0;
+      var requestNext = function () {
+        var theItem = allItems[requestIndex],
+            theSecret = String(2 + Math.random());
+
         chai.request(host)
-          .get(path.join(endpoint, 'items', theItem.id))
+          .put(path.join(endpoint, 'items', theItem.id))
+          .send({
+            "data": {
+              "secret": theSecret
+            }
+          })
           .end(function (err, res)
           {
             expect(err).to.be.null;
@@ -374,15 +382,35 @@ describe('App', function ()
             expect(getDigit(res.statusCode, 2)).to.equal(2);
             expect(res).to.be.json;
 
-            expect(res.body.data.id).to.equal(theItem.id);
+            expect(res.body.data).to.have.property('attributes')
+              .that.is.an('object')
+              .and.have.property('secret')
+                .that.equal(theSecret);
 
-            requestIndex++;
+            expect(res.body.data).to.have.property('id')
+              .that.is.a('string')
+              .and.equal(theItem.id);
 
-            if (requestIndex >= newItems.length) {
-              done();
-            } else {
-              requestNext();
-            }
+            getItem(theItem.id, function (err, item)
+            {
+              expect(err).to.be.null;
+
+              expect(item).to.have.property('attributes')
+                .that.is.an('object')
+                .and.have.property('secret')
+                  .that.equal(theSecret);
+
+              requestIndex++;
+
+              if (requestIndex >= allItems.length)
+              {
+                done();
+              }
+              else
+              {
+                requestNext();
+              }
+            });
           });
       };
 
@@ -391,14 +419,64 @@ describe('App', function ()
 
   });
 
-  describe.skip('Putting to /items/SomeID', function ()
+  describe('DELETEing /items/SomeID', function ()
   {
+    var allItems;
 
-  });
+    before(function (done)
+    {
+      getAllItems(function (err, items)
+      {
+        expect(err).to.be.null;
 
-  describe.skip('Deleting /items/SomeID', function ()
-  {
+        allItems = items;
 
+        done();
+      });
+    });
+
+    it('should delete the item', function (done)
+    {
+      // Requesting for all 400 seats may take a while.
+      this.timeout(100 * allItems.length); // Give 100 ms for each request.
+
+      var requestIndex = 0;
+      var requestNext = function () {
+        var theItem = allItems[requestIndex];
+
+        chai.request(host)
+          .delete(path.join(endpoint, 'items', theItem.id))
+          .end(function (err, res)
+          {
+            expect(err).to.be.null;
+            // statusCode should be 2**.
+            expect(getDigit(res.statusCode, 2)).to.equal(2);
+            expect(res).to.be.json;
+
+            expect(res.body.data).to.have.property('id')
+              .that.is.a('string')
+              .and.equal(theItem.id);
+
+            getItem(theItem.id, function (err, item)
+            {
+              expect(err).to.be.not.null;
+
+              requestIndex++;
+
+              if (requestIndex >= allItems.length)
+              {
+                done();
+              }
+              else
+              {
+                requestNext();
+              }
+            });
+          });
+      };
+
+      requestNext();
+    });
   });
 
 });
