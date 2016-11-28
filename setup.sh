@@ -27,15 +27,14 @@ curl https://install.meteor.com/ | sh
 }
 
 # Install dependencies
-npm install --global mocha
-npm install lodash chai chai-http
+npm install
 
 # Setup app.
 (
   cd "core-app"
   meteor npm install
   # Run app in background.
-  meteor --production &
+  meteor --port 3000 --production &
 )
 
 # Wait till the app is online.

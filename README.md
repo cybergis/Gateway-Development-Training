@@ -1,57 +1,115 @@
 # Stage 3 - Core Application Development, RESTful Service
 
-## Goal
+## Sub-stage 1 - [Remote Procedure Calls (RPC)](https://en.wikipedia.org/wiki/Remote_procedure_call)
 
-Learn how to develop the most fundamental part of a web application: the server logic, database and REST APIs. Know how to use the Meteor package system to take advantage of existing Atmosphere and Npm packages.
+### Goal
 
-## Materials
+Learn how to implement RPCs that meet the requirements.
 
-One specification on building JSON REST APIs: [http://jsonapi.org/](http://jsonapi.org/)
+HTTP RPC is the fundation of HTTP Restful APIs.
 
-Another specification: [https://labs.omniti.com/labs/jsend](https://labs.omniti.com/labs/jsend)
+Learn the fact that what people have been calling REST APIs are actually just RPCs.
 
-There is no must-follow specification as REST style itself is highly flexible.
+### Submission
 
-For implementing the REST APIs, [this guide](http://meteorpedia.com/read/REST_API) introduces a few of the many possible approaches.
+0. Branch from `stage-3.1`, name the new branch `"stage-3.1__your-name"` (without quotes; notice the *double-underscore*).
+0. Edit `/core-app/imports/api/items/collection.js` so it properly exports a MongoDB collection.
 
-## Submission
+   To see what is considered "proper", check files that require/imports this file. *(Hint: check some server-only code nearby.)*
 
-***Branch from `stage-3`, finish everything described below and create PR back against base branch `stage-3`.***
+0. Edit `/core-app/imports/startup/server/routes.js` so `"Add new item."` section is functional.
 
-We are developing a simplified movie theater ticketing system. The database design is up to you but the system has to meet a set of requirements on the REST APIs. Check the “Grading” section for implementation requirements.
+   Upon receiving a POST request such as:
+   ```
+   POST /rest/v1/items HTTP/1.1
+   Content-Type: application/json; charset=utf-8
+   Host: localhost:3000
+   Connection: close
 
-A customer typically goes through such a process to book a ticket:
+   {
+     "data": {
+       "secret": <SomeString>
+     }
+   }
+   ```
+   The server should respond with status code `201`, proper header indicating the response is UTF-8 JSON and body:
+   ```
+   {
+     "data": {
+       "type": 'items',
+       "id": <SomeID>,
+       "attributes": {
+         "createdAt": <SomeDate>,
+         "secret": <SomeString>
+       }
+     }
+   }
+   ```
+   where `<SomeID>` is the ID of the record, `<SomeDate>` is the creation date of the record (should be an instance of `Date`) and `<SomeString>` matches the request data.
 
-0. List all movies that are scheduled (for the next 30 days, in alphabetical order or temporal order)
-0. Pick a movie, and list all scheduled plays (for the next 30 days, in temporal order, filterable by date)
-0. Pick a play, and list all rooms for that movie at that time and their availability (how many seats are available) (in room number order or availability order).
-0. Pick a room, and list all seats for that room at that time and their availability (in seat number order or availability order).
-0. Pick a seat, and post order info to book the seat at that room for that play at that time, and get the ticket number or an error explaining why it didn't work.
+0. Edit `/core-app/imports/startup/server/routes.js` so `"Update the item."` section is functional.
 
-To simplify the requirements for this training, we make the following assumptions:
+   Upon receiving a PUT request such as:
+   ```
+   PUT /rest/v1/items/<SomeID> HTTP/1.1
+   Content-Type: application/json; charset=utf-8
+   Host: localhost:3000
+   Connection: close
 
-0. We offer only one movie.
-0. There is only one room.
-0. Each room must have at least 400 seats. (You can take it as exactly 400 seats)
-0. Plays are scheduled every 3 hours. 10 minutes cleanup and the rest for the movie. If the movie is shorter, we fill the void time with ads.
-0. The plays start on the hour (so exactly on 0am, 3am, 6am and etc. So exactly 8 slots per day per room.)
-0. There must be at least 10 different schedules for each movie.
-0. The customer can only book one ticket at a time.
-0. The customer can not cancel or refund the ticket once booked.
-0. The order details are provided with the ticket number, but the customer can not verify/lookup the order details with the ticket number.
+   {
+     "data": {
+       "secret": <SomeNewString>
+     }
+   }
+   ```
+   The server should respond with status code `200`, proper header indicating the response is UTF-8 JSON and body:
+   ```
+   {
+     "data": {
+       "type": 'items',
+       "id": <SomeID>,
+       "attributes": {
+         "createdAt": <SomeDate>,
+         "secret": <SomeNewString>
+       }
+     }
+   }
+   ```
+   where `<SomeID>` is the ID of the record, `<SomeDate>` is the creation date of the record (should be an instance of `Date`) and `<SomeNewString>` matches the request data.
 
-You would have to add code to fill in preset data for grading. Refer to the *fixtures* used in the last stage.
+0. Edit `/core-app/imports/startup/server/routes.js` so `"Delete the item."` section is functional.
 
-Advanced requirements:
+   Upon receiving a DELETE request such as:
+   ```
+   DELETE /rest/v1/items/<SomeID> HTTP/1.1
+   Host: localhost:3000
+   Connection: close
+   ```
+   The server should respond with status code `200`, proper header indicating the response is UTF-8 JSON and body:
+   ```
+   {
+     "data": {
+       "type": 'items',
+       "id": <SomeID>,
+       "attributes": {
+         "createdAt": <SomeDate>,
+         "secret": <SomeString>
+       }
+     }
+   }
+   ```
+   where `<SomeID>` is the ID of the record, `<SomeDate>` is the creation date of the record (should be an instance of `Date`) and `<SomeString>` is the value of the stored property of the record.
 
-0. Database design efficiency
+0. Commit your changes to your new branch.
+0. Create a pull request from your branch to base branch `stage-3.1`.
 
-## Grading
+### Grading
 
-- Fundamental
-    - Your app folder should be named `"core-app"` and created under root of the repo.
-    - Your app should be running solely on port `3000`.
-    - The grader will start your app by `meteor npm install && meteor run`.
-    - The grader will test the app against the [REST API expectations](./requirements.md).
-- Advanced
-    - Performance (how fast can the operations be done, hinting db design) competition
+- If the branch name and/or the PR is not created properly, you fail with no partial credit.
+- If the app could not run, for any reason, you fail with no partial credit.
+- If you modify anything you are not supposed to change in order to pass the test, you fail with no partial credit.
+- If the required collection isn't properly exported, the app most likely won't run so you most likely will fail with no partial credit.
+- 1 point for properly handling good POST requests. After a POST request with proper request data, a new data record should be created. The length of the record list should increase. The new data record should be accessible with the prepared APIs.
+- 1 point for properly handling good PUT requests. After a PUT request with proper request data, the corresponding data record should be updated with the request data. The updated data should be accessible with the prepared APIs.
+- 1 point for properly handling good DELETE requests. After a DELETE request with proper request data, the corresponding data record should no longer be accessible. The length of the record list should reduce.
+- (extra point) for properly handling bad requests.

@@ -6,5 +6,4 @@ install:
   - . setup.sh
 
 script:
-  - mocha grader.js
-
+  - npm run test
