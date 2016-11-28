@@ -16,6 +16,8 @@ Learn the fact that what people have been calling REST APIs are actually just RP
 - [Richardson Maturity Model](http://martinfowler.com/articles/richardsonMaturityModel.html)
 - [A Blog by Roy Fielding](http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven)
 - [Wikipedia / Roy Fielding](https://en.wikipedia.org/wiki/Roy_Fielding)
+- [How to Debug REST API](https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=how%20to%20debug%20rest%20api)
+- [REST Client](https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=rest+client)
 
 ### Submission
 
