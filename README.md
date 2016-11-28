@@ -10,6 +10,13 @@ HTTP RPC is the fundation of HTTP Restful APIs.
 
 Learn the fact that what people have been calling REST APIs are actually just RPCs.
 
+### Materials
+
+- [Wikipedia / Remote Procedure Call](https://en.wikipedia.org/wiki/Remote_procedure_call)
+- [Richardson Maturity Model](http://martinfowler.com/articles/richardsonMaturityModel.html)
+- [A Blog by Roy Fielding](http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven)
+- [Wikipedia / Roy Fielding](https://en.wikipedia.org/wiki/Roy_Fielding)
+
 ### Submission
 
 0. Branch from `stage-3.1`, name the new branch `"stage-3.1__your-name"` (without quotes; notice the *double-underscore*).
