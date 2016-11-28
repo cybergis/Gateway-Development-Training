@@ -108,7 +108,7 @@ Learn the fact that what people have been calling REST APIs are actually just RP
    where `<SomeID>` is the ID of the record, `<SomeDate>` is the creation date of the record (should be an instance of `Date`) and `<SomeString>` is the value of the stored property of the record.
 
 0. Commit your changes to your new branch.
-0. Create a pull request from your branch to base branch `stage-3.1`.
+0. Create a pull request from your branch to base branch `stage-3.1`. Please name the PR `"Stage 3.1 Submission <your-name>"`.
 
 ### Grading
 
