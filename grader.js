@@ -17,13 +17,13 @@ if (typeof process.env.TRAVIS_BRANCH === 'string' && process.env.TRAVIS_BRANCH !
       // This PR is from a branch named `baseBranchName__*`. Run tests normally.
     } else {
       // Unexpected branch name. Fail.
-      exit 1;
+      process.exit(1);
     }
   } else {
     // Push
     if (process.env.TRAVIS_BRANCH === baseBranchName) {
       // This is the base branch. Do not run tests for base branch (since it will always fail).
-      exit 0;
+      process.exit(0);
     } else {
       // This is not the base branch. Run tests normally.
     }
