@@ -7,6 +7,31 @@ var chai = require('chai');
 var expect = chai.expect;
 var chaiHttp = require('chai-http');
 
+var baseBranchName = 'stage-3.1';
+
+if (typeof process.env.TRAVIS_BRANCH === 'string' && process.env.TRAVIS_BRANCH !== "") {
+  // Travis.
+  if (typeof process.env.TRAVIS_PULL_REQUEST_BRANCH === 'string' && process.env.TRAVIS_PULL_REQUEST_BRANCH !== "") {
+    // PR
+    if (process.env.TRAVIS_PULL_REQUEST_BRANCH.indexOf(baseBranchName + '__') === 0) {
+      // This PR is from a branch named `baseBranchName__*`. Run tests normally.
+    } else {
+      // Unexpected branch name. Fail.
+      exit 1;
+    }
+  } else {
+    // Push
+    if (process.env.TRAVIS_BRANCH === baseBranchName) {
+      // This is the base branch. Do not run tests for base branch (since it will always fail).
+      exit 0;
+    } else {
+      // This is not the base branch. Run tests normally.
+    }
+  }
+} else {
+  // Not Travis. Run tests normally.
+}
+
 chai.use(chaiHttp);
 
 var host = 'http://localhost:3000';
