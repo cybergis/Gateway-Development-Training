@@ -36,7 +36,24 @@ RestApi.addRoute('items', { authRequired: false }, _.defaults({
   post () {
 
     //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    console.log('add new items');
+    const createAt = new Date();
+    const secret = this.bodyParams.data.secret;
+    const id = collection.insert({ createAt: createAt, secret: secret});    
+
+    return {
+      statusCode: 201,
+      body: {
+        "data": {
+          "type": 'items',
+          "id": id,
+          "attributes": {
+            "createdAt": createAt,
+            "secret": secret
+          }
+        }
+      }
+    };
 
   }
 
@@ -76,7 +93,36 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
   put () {
 
     //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const itemId = this.urlParams.itemId,
+          cursor = collection.find({ _id: itemId });
+
+    if (cursor.count() === 0) {
+      return Response_404;
+    }
+
+    const item = cursor.fetch()[0];
+
+    const secret = this.bodyParams.data.secret;
+
+    collection.update({_id: itemId},{
+      $set:{
+        secret: secret
+      }
+    });
+
+    return {
+      'statusCode': 200,
+      'body': {
+        "data": {
+          "type": 'items',
+          "id": itemID,
+          "attributes": {
+            "createdAt": item.createdAt,
+            "secret": secret
+          }
+        }
+      }
+    };
 
   },
 
@@ -84,8 +130,33 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
   delete () {
 
     //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const itemId = this.urlParams.itemId,
+          cursor = collection.find({ _id: itemId });
 
+    if (cursor.count() === 0) {
+      return Response_404;
+    }
+
+    const item = cursor.fetch()[0];
+
+    const secret = this.bodyParams.data.secret;
+
+    collection.remove(itemId);
+
+    return {
+      'statusCode': 200,
+      'body': {
+        "data": {
+          "type": 'items',
+          "id": itemID,
+          "attributes": {
+            "createdAt": item.createdAt,
+            "secret": secret
+          }
+        }
+      }
+    };
+ 
   }
 
 }, API_Base));
