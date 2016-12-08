@@ -35,8 +35,24 @@ RestApi.addRoute('items', { authRequired: false }, _.defaults({
   // Add new item.
   post () {
 
-    //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const newId = collection.insert({
+            createdAt: new Date(),
+            secret: this.bodyParams.data.secret
+          }),
+          newItem = collection.findOne({ _id: newId });
+
+    return {
+      'statusCode': 201,
+      'body': {
+        data: (({ _id, ...others }) => ({
+          type: 'items',
+          id: _id,
+          attributes: {
+            ...others
+          }
+        }))(newItem)
+      }
+    };
 
   }
 
@@ -75,16 +91,71 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
   // Update the item.
   put () {
 
-    //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const itemId = this.urlParams.itemId,
+          cursor = collection.find({ _id: itemId });
+
+    if (cursor.count() === 0) {
+      return Response_404;
+    }
+
+    const setValues = {};
+
+    // Pick updatable fields.
+    if (typeof this.bodyParams.data.secret !== 'undefined') {
+      setValues.secret = this.bodyParams.data.secret;
+    }
+
+    if (Object.keys(setValues).length > 0) {
+      collection.update({ _id: itemId }, {
+        $set: setValues
+      });
+    }
+
+    const item = collection.findOne({ _id: itemId });
+
+    // Provide both `statusCode` and `body` for `statusCode` to take effect.
+    return {
+      'statusCode': 200,
+      'body': {
+        data: (({ _id, ...others }) => ({
+          type: 'items',
+          id: _id,
+          attributes: {
+            ...others
+          }
+        }))(item)
+      }
+    };
 
   },
 
   // Delete the item.
   delete () {
 
-    //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const itemId = this.urlParams.itemId,
+          cursor = collection.find({ _id: itemId });
+
+    if (cursor.count() === 0) {
+      return Response_404;
+    }
+
+    const item = cursor.fetch()[0];
+
+    collection.remove({ _id: itemId });
+
+    // Provide both `statusCode` and `body` for `statusCode` to take effect.
+    return {
+      'statusCode': 200,
+      'body': {
+        data: (({ _id, ...others }) => ({
+          type: 'items',
+          id: _id,
+          attributes: {
+            ...others
+          }
+        }))(item)
+      }
+    };
 
   }
 
