@@ -103,7 +103,6 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
     }
 
     const item = cursor.fetch()[0];
-    const secret = this.bodyParams.data.secret;
     collection.update({_id: item._id},{
         $set:{
           secret: secret
