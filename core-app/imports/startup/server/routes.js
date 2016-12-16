@@ -139,7 +139,7 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
 
     const item = cursor.fetch()[0];
 
-    const secret = this.bodyParams.data.secret;
+    const secret = item.secret;
 
     collection.remove(itemId);
 
@@ -151,7 +151,7 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
           "id": itemId,
           "attributes": {
             "createdAt": item.createdAt,
-            "secret": item.secret
+            "secret": secret
           }
         }
       }
