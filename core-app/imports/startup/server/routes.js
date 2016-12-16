@@ -117,7 +117,7 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
       'body': {
         "data": {
           "type": 'items',
-          "id": itemID,
+          "id": itemId,
           "attributes": {
             "createdAt": item.createdAt,
             "secret": secret
@@ -148,7 +148,7 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
       'body': {
         "data": {
           "type": 'items',
-          "id": itemID,
+          "id": itemId,
           "attributes": {
             "createdAt": item.createdAt,
             "secret": secret
