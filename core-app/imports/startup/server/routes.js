@@ -36,7 +36,30 @@ RestApi.addRoute('items', { authRequired: false }, _.defaults({
   post () {
 
     //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    console.log('post items');
+
+    const now = new Date();
+    const secret = this.bodyParams.data.secret;
+
+    const id = collection.insert({
+        createAt: now,
+        secret: secret
+    });
+
+    // Provide both `statusCode` and `body` for `statusCode` to take effect.
+    return {
+      'statusCode': 201,
+      'body': {
+        'data':{          
+            'type':'items',
+            'id':id,
+            'attributes':{
+                'createdAt': now,
+                'secret': secret
+            }
+        }
+      }
+    };
 
   }
 
@@ -75,17 +98,71 @@ RestApi.addRoute('items/:itemId', { authRequired: false }, _.defaults({
   // Update the item.
   put () {
 
+    console.log('update items');
     //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const itemId = this.urlParams.itemId,
+          cursor = collection.find({_id: itemId});
+
+    if (cursor.count() === 0) {
+        return Response_404;
+    }
+
+    const item = cursor.fetch()[0];
+    const secret = this.bodyParams.data.secret;
+
+    collection.update({_id: item._id},{
+        $set:{
+          secret: secret
+        }
+      });
+
+
+    // Provide both `statusCode` and `body` for `statusCode` to take effect.
+    return {
+        'statusCode': 200,
+        'body': {
+            'data':{
+                'type':'items',
+                'id':item._id,
+                'attributes':{
+                    'createdAt': item.createdAt,
+                    'secret': secret
+                }
+            }
+        }
+    };
 
   },
 
   // Delete the item.
   delete () {
 
+    console.log('delete items');
     //! Write your code here to process the request data and return a meaningful response.
-    return Response_501;
+    const itemId = this.urlParams.itemId,
+          cursor = collection.find({_id: itemId});
 
+    if (cursor.count() === 0) {
+        return Response_404;
+    }
+
+    const item = cursor.fetch()[0];
+    collection.remove(item._id);
+
+    // Provide both `statusCode` and `body` for `statusCode` to take effect.
+    return {
+        'statusCode': 200,
+        'body': {
+            'data': {
+                'type':'items',
+                'id':item._id,
+                'attributes': {
+                    'createdAt': item.createdAt,
+                    'secret': item.secret
+                }
+            }
+        }
+    };
   }
 
 }, API_Base));
